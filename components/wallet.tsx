@@ -12,7 +12,7 @@ import { WalletCardSection } from './card';
 
 export const WalletSection = () => {
   const [chainName, setChainName] = useState<ChainName | undefined>(
-    'cosmoshub'
+    'osmosis'
   );
   const { chainRecords, getChainLogo } = useManager();
 

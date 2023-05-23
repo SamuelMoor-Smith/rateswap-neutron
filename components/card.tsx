@@ -90,7 +90,8 @@ export const WalletCardSection = ({ chainName }: { chainName: string }) => {
     <>
       {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
       <GridItem px={6}>
-        <Stack
+        {connectWalletButton}
+        {/* <Stack
           justifyContent="center"
           alignItems="center"
           borderRadius="lg"
@@ -108,7 +109,7 @@ export const WalletCardSection = ({ chainName }: { chainName: string }) => {
           <Box w="full" maxW={{ base: 52, md: 64 }}>
             {connectWalletButton}
           </Box>
-        </Stack>
+        </Stack> */}
       </GridItem>
     </>
   );
