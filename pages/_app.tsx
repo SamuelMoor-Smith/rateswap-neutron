@@ -6,7 +6,7 @@ import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
 
-import { SignerOptions } from '@cosmos-kit/core';
+import { MainWalletBase, SignerOptions } from '@cosmos-kit/core';
 import { chains, assets } from 'chain-registry';
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
@@ -21,7 +21,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       <ChainProvider
         chains={chains}
         assetLists={assets}
-        wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
+        wallets={([...keplrWallets, ...cosmostationWallets, ...leapWallets] as unknown) as MainWalletBase[]}
         walletConnectOptions={{
           signClient: {
             projectId: 'a8510432ebb71e6948cfd6cde54b70f7',

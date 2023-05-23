@@ -242,7 +242,7 @@ import {
                     }
                   }}
                 >
-                  {links.map(({ label, href, icon }) => (
+                  {links ? links.map(({ label, href, icon }) => (
                     <>
                       {customLink ? (
                         customLink(label, href)
@@ -254,7 +254,7 @@ import {
                         </NextLink>
                       )}
                     </>
-                  ))}
+                  )) : []}
                 </Stack>
               </Box>
               <Box position="relative" bottom={0} left={0} right={0} p={4}>
@@ -409,7 +409,7 @@ import {
               }
             }}
           >
-            {links.map(({ label, href, icon }) => {
+            {links ? links.map(({ label, href, icon }) => {
               return (
                 <>
                   {customLink ? (
@@ -427,7 +427,7 @@ import {
                   )}
                 </>
               );
-            })}
+            }) : []}
           </Stack>
           {connectButton && (
             <Center position="relative" w="full" h={20} p={4} pt={2}>
@@ -544,9 +544,10 @@ import {
             customLink={customLink}
             chainDropdown={chainDropdown}
             copyAddressButton={copyAddressButton}
-            children={children}
             toggleColorMode={toggleColorMode}
-          />
+          >
+            {children}
+          </DesktopMenu>
         </Box>
         <Box display={{ base: 'block', lg: 'none' }} w="full" h="full">
           <MobileMenu
@@ -557,15 +558,16 @@ import {
             customLink={customLink}
             chainDropdown={chainDropdown}
             copyAddressButton={copyAddressButton}
-            children={children}
             toggleColorMode={toggleColorMode}
-          />
+          >
+            {children}
+          </MobileMenu>
         </Box>
       </Box>
     );
   };
   
-  export default function () {
+  export default function Layout () {
 
     const [chainName, setChainName] = useState<ChainName | undefined>(
         'osmosis'
