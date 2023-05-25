@@ -8,6 +8,7 @@ import { wallets as leapWallets } from '@cosmos-kit/leap';
 
 import { MainWalletBase, SignerOptions } from '@cosmos-kit/core';
 import { chains, assets } from 'chain-registry';
+import Layout from '../components/layout';
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
@@ -37,7 +38,9 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
         wrappedWithChakra={true}
         signerOptions={signerOptions}
       >
-        <Component {...pageProps} />
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
       </ChainProvider>
     </ChakraProvider>
   );

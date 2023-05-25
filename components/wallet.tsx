@@ -1,5 +1,4 @@
 import { useManager } from '@cosmos-kit/react';
-import { Center, Grid, GridItem } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ChainOption,
@@ -9,6 +8,7 @@ import {
 } from '.';
 import { ChainName } from '@cosmos-kit/core';
 import { WalletCardSection } from './card';
+import { Box } from '@chakra-ui/react';
 
 export const WalletSection = () => {
   const [chainName, setChainName] = useState<ChainName | undefined>(
@@ -52,23 +52,9 @@ export const WalletSection = () => {
     />
   );
 
-  return (
-    <Center py={16}>
-      <Grid
-        w="full"
-        maxW="sm"
-        templateColumns="1fr"
-        rowGap={4}
-        alignItems="center"
-        justifyContent="center"
-      >
-        <GridItem>{chooseChain}</GridItem>
-        {chainName ? (
-          <WalletCardSection chainName={chainName}></WalletCardSection>
-        ) : (
-          <ConnectWalletButton buttonText={'Connect Wallet'} isDisabled />
-        )}
-      </Grid>
-    </Center>
+  return chainName ? (
+    <WalletCardSection chainName={chainName} />
+  ) : (
+    <ConnectWalletButton buttonText={'Connect Wallet'} isDisabled />
   );
 };
