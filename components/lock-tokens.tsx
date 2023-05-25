@@ -18,8 +18,13 @@ import {
   NumberDecrementStepper,
 } from "@chakra-ui/react";
 import { ImCross } from "react-icons/im";
+import { UseCustomColors } from "./custom-colors";
 
 export const LockTokens = () => {
+
+    const { white_or_black, orange300_or_orange300, gray_or_white, gray50_or_whiteAlpha200, gray100_or_gray700, gray100_or_whiteAlpha300, primary100_or_primary500, primary500_or_primary300, primary700_or_primary200, blackAlpha50_or_whiteAlpha50, blackAlpha100_or_whiteAlpha100, blackAlpha200_or_whiteAlpha200, blackAlpha200_or_whiteAlpha400, blackAlpha300_or_whiteAlpha300, blackAlpha300_or_whiteAlpha600, blackAlpha400_or_whiteAlpha400, blackAlpha400_or_whiteAlpha500, blackAlpha400_or_whiteAlpha600, blackAlpha500_or_whiteAlpha600, blackAlpha600_or_whiteAlpha600, blackAlpha700_or_whiteAlpha700, blackAlpha800_or_whiteAlpha800, blackAlpha800_or_whiteAlpha900, whiteAlpha500_or_whiteAlpha50, blackAlpha900_or_whiteAlpha900, color1, color2, color3, color4, color5 } = UseCustomColors();
+
+  
   const plans = [
     { days: "a day", value: "1day", fees: "20.24%" },
     { days: "7 days", value: "7days", fees: "32.39%" },
@@ -38,7 +43,7 @@ export const LockTokens = () => {
     show ? (
       <Flex align="center" justify="center" p={6}>
         <Box
-          bg={useColorModeValue("blackAlpha.50", "whiteAlpha.50")}
+          bg={blackAlpha50_or_whiteAlpha50}
           borderRadius="2xl"
           maxW={{ base: "full", md: "2xl" }}
           w="full"
@@ -50,7 +55,7 @@ export const LockTokens = () => {
               variant="ghost"
               icon={<ImCross />}
               aria-label="close"
-              color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+              color={blackAlpha600_or_whiteAlpha600}
               onClick={() => setShow(false)}
             />
           </Flex>
@@ -68,17 +73,11 @@ export const LockTokens = () => {
                   <Stack
                     key={i}
                     border="1px solid"
-                    borderColor={useColorModeValue(
-                      radioValue === value ? "orange.300" : "blackAlpha.400",
-                      radioValue === value ? "orange.300" : "whiteAlpha.400"
-                    )}
+                    borderColor={radioValue === value ? orange300_or_orange300 : blackAlpha400_or_whiteAlpha400}
                     borderRadius="xl"
                     boxShadow={
                       radioValue === value
-                        ? useColorModeValue(
-                            "0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.06);",
-                            "0 4px 10px -3px rgba(255,255,255,0.2)"
-                          )
+                        ? color5
                         : "none"
                     }
                     p={4}
@@ -86,10 +85,7 @@ export const LockTokens = () => {
                       cursor: "pointer",
                       boxShadow:
                         value !== radioValue &&
-                        useColorModeValue(
-                          "0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.06);",
-                          "0 4px 10px -3px rgba(255,255,255,0.2)"
-                        ),
+                        color5,
                     }}
                     css={{ "&>label": { cursor: "pointer" } }}
                   >
@@ -106,7 +102,7 @@ export const LockTokens = () => {
           </RadioGroup>
           <Box
             border="1px solid"
-            borderColor={useColorModeValue("blackAlpha.400", "whiteAlpha.400")}
+            borderColor={blackAlpha400_or_whiteAlpha400}
             borderRadius="xl"
             p={4}
             mb={8}
@@ -118,7 +114,7 @@ export const LockTokens = () => {
               Available LP token:&nbsp;
               <Text
                 as="span"
-                color={useColorModeValue("primary.700", "primary.200")}
+                color={primary700_or_primary200}
               >
                 0 GAMM-600
               </Text>
@@ -127,7 +123,7 @@ export const LockTokens = () => {
               display="flex"
               alignItems="center"
               value={inputValue}
-              bg={useColorModeValue("whiteAlpha.500", "whiteAlpha.50")}
+              bg={whiteAlpha500_or_whiteAlpha50}
               min={0}
               max={20}
               onChange={(value) => setInputValue(parseInt(value))}

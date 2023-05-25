@@ -4,7 +4,6 @@ import {
   Heading,
   Text,
   Stack,
-  useColorModeValue,
   Flex,
   IconButton,
   CircularProgress,
@@ -35,6 +34,7 @@ import {
 import { ImCross } from "react-icons/im";
 import { IoIosArrowDown, IoMdInformationCircle } from "react-icons/io";
 import { assets } from "chain-registry";
+import { UseCustomColors } from "./custom-colors";
 
 interface dataType {
   label: string;
@@ -74,11 +74,14 @@ const AddLiquidity = ({
   openPop: popType;
   setOpenPop: (value: popType) => void;
 }) => {
+
+  const { white_or_black, orange300_or_orange300, gray_or_white, gray50_or_whiteAlpha200, gray100_or_gray700, gray100_or_whiteAlpha300, primary100_or_primary500, primary500_or_primary300, primary700_or_primary200, blackAlpha50_or_whiteAlpha50, blackAlpha100_or_whiteAlpha100, blackAlpha200_or_whiteAlpha200, blackAlpha200_or_whiteAlpha400, blackAlpha300_or_whiteAlpha300, blackAlpha300_or_whiteAlpha600, blackAlpha400_or_whiteAlpha400, blackAlpha400_or_whiteAlpha500, blackAlpha400_or_whiteAlpha600, blackAlpha500_or_whiteAlpha600, blackAlpha600_or_whiteAlpha600, blackAlpha700_or_whiteAlpha700, blackAlpha800_or_whiteAlpha800, blackAlpha800_or_whiteAlpha900, whiteAlpha500_or_whiteAlpha50, blackAlpha900_or_whiteAlpha900, color1, color2, color3, color4, color5 } = UseCustomColors();
+
   return (
     <>
       <Text fontSize="sm" fontWeight="semibold" pt={2}>
         LP token balance:&nbsp;
-        <Text as="span" color={useColorModeValue("primary.500", "primary.300")}>
+        <Text as="span" color={primary500_or_primary300}>
           0 GAMM-600
         </Text>
       </Text>
@@ -99,7 +102,7 @@ const AddLiquidity = ({
                     borderRadius={
                       openPop.isOpen ? "0 0 0.375rem 0.375rem" : "md"
                     }
-                    bg={useColorModeValue("#f5f5f5", "whiteAlpha.50")}
+                    bg={color4}
                     w="full"
                     maxW={{ base: 60, sm: "sm" }}
                     minW={{ base: 60, sm: "sm" }}
@@ -109,6 +112,7 @@ const AddLiquidity = ({
                       {openPop.optionsIndex.map(
                         ({ label: optionLabel, percent }) => (
                           <Button
+                            key={optionLabel}
                             variant="ghost"
                             w="full"
                             h="fit-content"
@@ -136,10 +140,7 @@ const AddLiquidity = ({
                           >
                             <CircularProgress
                               value={percent}
-                              color={useColorModeValue(
-                                "primary.500",
-                                "primary.300"
-                              )}
+                              color={primary500_or_primary300}
                               size="full"
                               w={12}
                               mr={{ base: 3, sm: 4 }}
@@ -158,10 +159,7 @@ const AddLiquidity = ({
                 <Flex
                   key={value}
                   border="1px solid"
-                  borderColor={useColorModeValue(
-                    "blackAlpha.100",
-                    "whiteAlpha.100"
-                  )}
+                  borderColor={blackAlpha100_or_whiteAlpha100}
                   borderRadius={openPop.isOpen ? "1rem 1rem 1rem 0" : "2xl"}
                   align="center"
                   flexDirection={{ base: "column", sm: "row" }}
@@ -177,7 +175,7 @@ const AddLiquidity = ({
                   >
                     <CircularProgress
                       value={percent}
-                      color={useColorModeValue("primary.500", "primary.300")}
+                      color={primary500_or_primary300}
                       size={14}
                       mr={4}
                     >
@@ -225,10 +223,7 @@ const AddLiquidity = ({
                         Available&nbsp;
                         <Text
                           as="span"
-                          color={useColorModeValue(
-                            "primary.500",
-                            "primary.300"
-                          )}
+                          color={primary500_or_primary300}
                         >
                           {availableCurrency}&nbsp;
                         </Text>
@@ -260,7 +255,7 @@ const AddLiquidity = ({
                     <NumberInput
                       alignItems="center"
                       value={tokenInputValue[i].value}
-                      bg={useColorModeValue("whiteAlpha.500", "whiteAlpha.50")}
+                      bg={whiteAlpha500_or_whiteAlpha50}
                       min={0}
                       max={availableCurrency}
                       onChange={(val) => {
@@ -310,10 +305,10 @@ const AddLiquidity = ({
         <Tooltip
           label="Single Asset LP allows you to provide liquidity using one asset. However, this will impact the pool price of the asset you’re providing liquidity with."
           placement="top-end"
-          bg={useColorModeValue("blackAlpha.900", "whiteAlpha.900")}
+          bg={blackAlpha900_or_whiteAlpha900}
           borderRadius="lg"
           border="1px solid"
-          borderColor={useColorModeValue("blackAlpha.100", "whiteAlpha.100")}
+          borderColor={blackAlpha100_or_whiteAlpha100}
         >
           <Box position="relative">
             <IoMdInformationCircle />
@@ -324,10 +319,10 @@ const AddLiquidity = ({
         flexDirection={{ base: "column", sm: "row" }}
         justify="space-between"
         textAlign={{ base: "end", sm: "start" }}
-        bg={useColorModeValue("blackAlpha.50", "whiteAlpha.50")}
+        bg={blackAlpha50_or_whiteAlpha50}
         borderRadius="lg"
         border="1px solid"
-        borderColor={useColorModeValue("blackAlpha.100", "whiteAlpha.100")}
+        borderColor={blackAlpha100_or_whiteAlpha100}
         p={4}
         mb={6}
       >
@@ -395,7 +390,7 @@ const RemoveLiquidity = ({
       </Slider>
       <SimpleGrid columns={{ sm: 4 }} spacing={4} mb={20}>
         {gaps.map((v) => (
-          <Button variant="outline" onClick={() => setRemoveValue(v)}>
+          <Button key={v.toString()} variant="outline" onClick={() => setRemoveValue(v)}>
             {v}%
           </Button>
         ))}
@@ -416,6 +411,9 @@ const RemoveLiquidity = ({
 };
 
 const ManageLiquidity = () => {
+
+  const { white_or_black, orange300_or_orange300, gray_or_white, gray50_or_whiteAlpha200, gray100_or_gray700, gray100_or_whiteAlpha300, primary100_or_primary500, primary500_or_primary300, primary700_or_primary200, blackAlpha50_or_whiteAlpha50, blackAlpha100_or_whiteAlpha100, blackAlpha200_or_whiteAlpha200, blackAlpha200_or_whiteAlpha400, blackAlpha300_or_whiteAlpha300, blackAlpha300_or_whiteAlpha600, blackAlpha400_or_whiteAlpha400, blackAlpha400_or_whiteAlpha500, blackAlpha400_or_whiteAlpha600, blackAlpha500_or_whiteAlpha600, blackAlpha600_or_whiteAlpha600, blackAlpha700_or_whiteAlpha700, blackAlpha800_or_whiteAlpha800, blackAlpha800_or_whiteAlpha900, whiteAlpha500_or_whiteAlpha50, blackAlpha900_or_whiteAlpha900, color1, color2, color3, color4, color5 } = UseCustomColors();
+
   const [showModel, setShowModel] = useState(true);
   const [data, setData] = useState<dataType[]>([]);
   const [tokenInputValue, setTokenInputValue] = useState<inputType[]>([]);
@@ -504,7 +502,7 @@ const ManageLiquidity = () => {
     showModel ? (
       <Flex align="center" justify="center" p={{ base: 4, sm: 8 }}>
         <Box
-          bg={useColorModeValue("blackAlpha.50", "whiteAlpha.50")}
+          bg={blackAlpha50_or_whiteAlpha50}
           borderRadius="2xl"
           maxW={{ base: "full", md: "4xl" }}
           w="full"
@@ -516,7 +514,7 @@ const ManageLiquidity = () => {
               variant="ghost"
               icon={<ImCross />}
               aria-label="close"
-              color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+              color={blackAlpha600_or_whiteAlpha600}
               onClick={() => setShowModel(false)}
             />
           </Flex>
