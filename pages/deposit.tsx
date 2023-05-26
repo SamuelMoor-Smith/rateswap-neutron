@@ -1,8 +1,8 @@
-import { Borrow } from '../components/borrow';
+import { Deposit } from '../components/pages/deposit';
 
 export default function DepositPage() {
 
   return (
-    <Borrow />
+    <Deposit />
   );
 }

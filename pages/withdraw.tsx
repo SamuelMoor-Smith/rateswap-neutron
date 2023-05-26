@@ -1,8 +1,8 @@
-import { Borrow } from '../components/borrow';
+import Withdraw from '../components/pages/withdraw';
 
 export default function WithdrawPage() {
 
   return (
-    <Borrow />
+    <Withdraw />
   );
 }

@@ -1196,7 +1196,6 @@ type AssetType = {
         <Button h={{ base: 12, md: 16 }} w="full" colorScheme="primary">
           Swap
         </Button>
-        <LockTokens />;
       </Stack>
     );
   };
