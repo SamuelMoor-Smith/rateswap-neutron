@@ -31,17 +31,21 @@ type IconTypeProps = string | IconType | JSX.Element | React.ReactNode | any;
   };
   interface LinkListType extends CategoryComponentType {
     icon?: React.ReactNode;
+    category: string;
   }
+
+  type CategorizedLinksType = { category: string, links: LinkListType[] };
+
   type SimpleLayoutType = {
     logo?: React.ReactNode;
     connectButton?: React.ReactNode;
-    links?: LinkListType[];
+    categorizedLinks?: CategorizedLinksType[];
     customLink?: Function;
     chainDropdown?: React.ReactNode;
     copyAddressButton?: React.ReactNode;
     isFullWidth?: boolean;
     children: React.ReactNode;
-  };
+};
   interface SimpleLayoutMenuType extends SimpleLayoutType {
     toggleColorMode: () => void;
   }
@@ -92,7 +96,7 @@ export const MobileMenu = ({
     isFullWidth,
     logo,
     connectButton,
-    links,
+    categorizedLinks,
     customLink,
     chainDropdown,
     copyAddressButton,
@@ -205,7 +209,27 @@ export const MobileMenu = ({
                     }
                   }}
                 >
-                  {links ? links.map(({ label, href, icon }) => (
+                  {categorizedLinks ? (categorizedLinks.map(({ category, links }) => {
+                    return (
+                      <>
+                        <Text fontSize="lg" fontWeight="bold" mb={2}>{category}</Text>
+                        {links.map(({ label, href, icon }) => (
+                          <>
+                            {customLink ? (
+                              customLink(label, href)
+                            ) : (
+                              <NextLink href={href} passHref={true}>
+                                <ChakraLink _focus={{ textDecoration: 'none' }}>
+                                  <MenuLinkButton text={label} icon={icon} />
+                                </ChakraLink>
+                              </NextLink>
+                            )}
+                          </>
+                        ))}
+                      </>
+                    )
+                  })) : []};
+                  {/* {links ? links.map(({ label, href, icon }) => (
                     <>
                       {customLink ? (
                         customLink(label, href)
@@ -217,7 +241,7 @@ export const MobileMenu = ({
                         </NextLink>
                       )}
                     </>
-                  )) : []}
+                  )) : []} */}
                 </Stack>
               </Box>
               <Box position="relative" bottom={0} left={0} right={0} p={4}>
@@ -305,7 +329,7 @@ export const MobileMenu = ({
 export const DesktopMenu = ({
     logo,
     connectButton,
-    links,
+    categorizedLinks,
     customLink,
     chainDropdown,
     copyAddressButton,
@@ -372,7 +396,30 @@ export const DesktopMenu = ({
               }
             }}
           >
-            {links ? links.map(({ label, href, icon }) => {
+            {categorizedLinks ? (categorizedLinks.map(({ category, links }) => {
+              return (
+                <>
+                  <Text fontSize="lg" fontWeight="bold" mb={2}>{category}</Text>
+                  {links.map(({ label, href, icon }) => (
+                    <>
+                      {customLink ? (
+                        customLink(label, href)
+                      ) : (
+                        <NextLink href={href} passHref={true}>
+                          <ChakraLink
+                            _hover={{ textDecoration: 'none' }}
+                            _focus={{ outline: 'none' }}
+                          >
+                            <MenuLinkButton text={label} icon={icon} />
+                          </ChakraLink>
+                        </NextLink>
+                      )}
+                    </>
+                  ))}
+                </>
+              )
+            })) : []};
+            {/* {links ? links.map(({ label, href, icon }) => {
               return (
                 <>
                   {customLink ? (
@@ -389,7 +436,7 @@ export const DesktopMenu = ({
                   )}
                 </>
               );
-            }) : []}
+            }) : []} */}
           </Stack>
           {connectButton && (
             <Center position="relative" w="full" h={20} p={4} pt={2}>

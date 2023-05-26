@@ -27,7 +27,7 @@ import Link from 'next/link';
 type SimpleLayoutType = {
   logo?: React.ReactNode;
   connectButton?: React.ReactNode;
-  links?: LinkListType[];
+  categorizedLinks?: CategorizedLinksType[];
   customLink?: Function;
   chainDropdown?: React.ReactNode;
   copyAddressButton?: React.ReactNode;
@@ -40,12 +40,15 @@ type CategoryComponentType = {
 };
 interface LinkListType extends CategoryComponentType {
   icon?: React.ReactNode;
+  category: string;
 }
+
+type CategorizedLinksType = { category: string, links: LinkListType[] };
   
 const SimpleLayout = ({
   logo,
   connectButton,
-  links,
+  categorizedLinks,
   customLink,
   chainDropdown,
   copyAddressButton,
@@ -60,7 +63,7 @@ const SimpleLayout = ({
           <DesktopMenu
             logo={logo}
             connectButton={connectButton}
-            links={links}
+            categorizedLinks={categorizedLinks}
             customLink={customLink}
             chainDropdown={chainDropdown}
             copyAddressButton={copyAddressButton}
@@ -74,7 +77,7 @@ const SimpleLayout = ({
             isFullWidth={isFullWidth}
             logo={logo}
             connectButton={connectButton}
-            links={links}
+            categorizedLinks={categorizedLinks}
             customLink={customLink}
             chainDropdown={chainDropdown}
             copyAddressButton={copyAddressButton}
@@ -157,31 +160,58 @@ const SimpleLayout = ({
         </a>
       </Link>
     );
-    const linkItems = [
-      {
-        label: '🫳 Borrow',
-        href: '/borrow'
-      },
-      {
-        label: '🫴 Lend',
-        href: '/lend'
-      },
-      {
-        label: '💧 Pool',
-        href: '/pool'
-      },
-      {
-        label: '📊 Dashboard',
-        href: '/dashboard'
-      },
-    ];
+    const linkItems = {
+      'Borrower': [
+        {
+          label: '🏦 Deposit',
+          href: '/deposit',
+          category: 'Borrower'
+        },
+        {
+          label: '🪙 Mint',
+          href: '/mint',
+          category: 'Borrower'
+        },
+        {
+          label: '🫴 Repay',
+          href: '/repay',
+          category: 'Borrower'
+        },
+        {
+          label: '🫳 Withdraw',
+          href: '/withdraw',
+          category: 'Borrower'
+        }
+      ],
+      'Exchange': [
+        {
+          label: '📈 Buy',
+          href: '/buy',
+          category: 'Exchange'
+        },
+        {
+          label: '📉 Sell',
+          href: '/sell',
+          category: 'Exchange'
+        }
+      ],
+      'Lender': [
+        {
+          label: '💰 Redeem',
+          href: '/redeem',
+          category: 'Lender'
+        }
+      ]
+    };
+    
+    const categorizedLinks: CategorizedLinksType[] = Object.entries(linkItems).map(([category, links]) => ({ category, links }));    
   
     return (
       <Box w="full" h="full" minH={typeof window !== 'undefined' ? window.innerHeight : 0}>
         <SimpleLayout
           logo={logo}
           connectButton={WalletSection()}
-          links={linkItems}
+          categorizedLinks={categorizedLinks}
           chainDropdown={chooseChain}
           copyAddressButton={chainName ? (addressBtn) : (<CopyAddressBtn walletStatus={WalletStatus.Connected} connected={undefined} />)}
           isFullWidth={false}
