@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Switch, useColorModeValue } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td, Switch, useColorModeValue, IconButton } from '@chakra-ui/react';
 import { OrderType } from './order-type';
+import { CloseIcon } from '@chakra-ui/icons';
 
 const mockData = {
     [OrderType.BUY]: [
@@ -54,18 +55,23 @@ const mockData = {
     ],
 };
 
-export function OrderBook({ orderType }: { orderType: OrderType }) {
+export function MyOrders({ orderType }: { orderType: OrderType }) {
     const color = useColorModeValue(orderType === OrderType.BUY ? "green.500" : "red.500", orderType === OrderType.BUY ? "green.200" : "red.200");
+
+    const handleCancelOrder = (orderIndex: number) => {
+        // put your cancel order logic here
+        console.log(`Order at index ${orderIndex} is cancelled`);
+    };
 
     return (
         <Box w="100%" bg="transparent">
             <Table variant="unstyled" size="sm">
-                {orderType === OrderType.BUY && 
-                <Thead>
+                {orderType === OrderType.BUY && <Thead>
                     <Tr>
-                        <Th color={color} fontWeight="bold" width="33%">Price (USDT)</Th>
-                        <Th color={color} fontWeight="bold" width="33%">Size (BTC)</Th>
-                        <Th color={color} fontWeight="bold" width="33%">Total (USDT)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Price (USDT)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Size (BTC)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Total (USDT)</Th>
+                        <Th width="25%"></Th>  {/* Added new header for cancel button */}
                     </Tr>
                 </Thead>}
             </Table>
@@ -74,9 +80,20 @@ export function OrderBook({ orderType }: { orderType: OrderType }) {
                     <Tbody>
                         {mockData[orderType].map((order, index) => (
                             <Tr key={index}>
-                                <Td color={color} width="33%">{order.price}</Td>
-                                <Td color={color} width="33%">{order.size}</Td>
-                                <Td color={color} width="33%">{order.total}</Td>
+                                <Td color={color} width="25%">{order.price}</Td>
+                                <Td color={color} width="25%">{order.size}</Td>
+                                <Td color={color} width="25%">{order.total}</Td>
+                                <Td width="25%">
+                                    {/* Added cancel button with red X */}
+                                    <IconButton 
+                                        aria-label="Cancel Order"
+                                        icon={<CloseIcon />} 
+                                        colorScheme="red" 
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleCancelOrder(index)}
+                                    />
+                                </Td>
                             </Tr>
                         ))}
                     </Tbody>
@@ -85,9 +102,10 @@ export function OrderBook({ orderType }: { orderType: OrderType }) {
             {orderType === OrderType.SELL && <Table variant="unstyled" size="sm">
                 <Thead>
                     <Tr>
-                        <Th color={color} fontWeight="bold" width="33%">Price (USDT)</Th>
-                        <Th color={color} fontWeight="bold" width="33%">Size (BTC)</Th>
-                        <Th color={color} fontWeight="bold" width="33%">Total (USDT)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Price (USDT)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Size (BTC)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Total (USDT)</Th>
+                        <Th width="25%"></Th>  {/* Added new header for cancel button */}
                     </Tr>
                 </Thead>
             </Table>}

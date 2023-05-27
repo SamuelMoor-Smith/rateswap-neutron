@@ -1,9 +1,10 @@
-import { Box, Flex, Heading, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Box, Divider, Flex, Heading, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
 import { OrderBook } from '../order-book';
 import { UseCustomColors } from "../custom-colors";
 import PlaceBids from '../place-bids';
 import { OrderType } from '../order-type';
 import { useState } from 'react';
+import { MyOrders } from '../my-orders';
 
 export default function Exchange() {
     
@@ -25,11 +26,13 @@ export default function Exchange() {
             <Heading size="lg">Order Book</Heading>
         </Flex>
         <OrderBook orderType={OrderType.BUY} />
+        <Divider />
+        <OrderBook orderType={OrderType.SELL} />
         <Tabs
             isFitted={true}
             colorScheme="primary"
             onChange={(index) => setTabIndex(index)}
-            mb={6}
+            mt={6}
           >
             <TabList mb="1em">
               {tabName.map((name, index) => (
@@ -43,11 +46,17 @@ export default function Exchange() {
               ))}
             </TabList>
             <TabPanels>
-              <TabPanel p={0}>
+              <TabPanel>
                 <PlaceBids orderType={OrderType.BUY} />
               </TabPanel>
               <TabPanel>
                 <PlaceBids orderType={OrderType.SELL} />
+              </TabPanel>
+              <TabPanel>
+                <Heading size="md" mb={5}>Your Orders</Heading>
+                <MyOrders orderType={OrderType.BUY} />
+                <Divider />
+                <MyOrders orderType={OrderType.SELL} />
               </TabPanel>
             </TabPanels>
           </Tabs>
