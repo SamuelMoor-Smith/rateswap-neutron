@@ -185,15 +185,10 @@ const SimpleLayout = ({
       ],
       'Exchange': [
         {
-          label: '📈 Buy',
-          href: '/buy',
+          label: '📈 Exchange',
+          href: '/exchange',
           category: 'Exchange'
         },
-        {
-          label: '📉 Sell',
-          href: '/sell',
-          category: 'Exchange'
-        }
       ],
       'Lender': [
         {
