@@ -229,19 +229,6 @@ export const MobileMenu = ({
                       </>
                     )
                   })) : []};
-                  {/* {links ? links.map(({ label, href, icon }) => (
-                    <>
-                      {customLink ? (
-                        customLink(label, href)
-                      ) : (
-                        <NextLink href={href} passHref={true}>
-                          <ChakraLink _focus={{ textDecoration: 'none' }}>
-                            <MenuLinkButton text={label} icon={icon} />
-                          </ChakraLink>
-                        </NextLink>
-                      )}
-                    </>
-                  )) : []} */}
                 </Stack>
               </Box>
               <Box position="relative" bottom={0} left={0} right={0} p={4}>
@@ -419,24 +406,6 @@ export const DesktopMenu = ({
                 </>
               )
             })) : []};
-            {/* {links ? links.map(({ label, href, icon }) => {
-              return (
-                <>
-                  {customLink ? (
-                    customLink(label, href)
-                  ) : (
-                    <NextLink href={href} passHref={true}>
-                      <ChakraLink
-                        _hover={{ textDecoration: 'none' }}
-                        _focus={{ outline: 'none' }}
-                      >
-                        <MenuLinkButton text={label} icon={icon} />
-                      </ChakraLink>
-                    </NextLink>
-                  )}
-                </>
-              );
-            }) : []} */}
           </Stack>
           {connectButton && (
             <Center position="relative" w="full" h={20} p={4} pt={2}>
