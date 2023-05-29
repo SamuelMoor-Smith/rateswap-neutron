@@ -435,12 +435,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
-    // Initialize an empty vector to hold the results
-    let mut State: Vec<State> = vec![];
+    // Load state from storage
+    let state = STATE.load(deps.storage)?;
 
+    // Put it in a vector, since your response expects a vector
+    let State: Vec<State> = vec![state];
 
-    Ok(StateResponse { State:State })
+    Ok(StateResponse { State })
 }
+
 
 
 pub fn query_orderbook(deps: Deps) -> StdResult<OrderbookResponse> {
