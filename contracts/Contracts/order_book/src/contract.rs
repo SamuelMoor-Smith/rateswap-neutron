@@ -306,7 +306,7 @@ fn create_bid(
     // Load the order bucket for the price point from the orderbook
     let mut bucket = ORDER_BOOK.load(deps.storage, &format!("{}", price))?;
     // Add the order to the bucket and save it back to the orderbook
-    bucket.add_order(order, OrderType::Bid);
+    bucket.add_order(order.clone(), OrderType::Bid);
     ORDER_BOOK.save(deps.storage, &format!("{}", price), &bucket)?;
     ORDERS.save(deps.storage, &order.id, &order)?;
 
@@ -345,7 +345,7 @@ fn create_ask(
     // Load the order bucket for the price point from the orderbook
     let mut bucket = ORDER_BOOK.load(deps.storage, &format!("{}", price))?;
     // Add the order to the bucket and save it back to the orderbook
-    bucket.add_order(order, OrderType::Ask);
+    bucket.add_order(order.clone(), OrderType::Ask);
     ORDER_BOOK.save(deps.storage, &format!("{}", price), &bucket)?;
     ORDERS.save(deps.storage, &order.id, &order)?;
 
