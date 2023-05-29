@@ -95,6 +95,8 @@ pub fn execute_receive(
         address: info.sender.clone(),     
     });
 
+    println!("info.sender: {:?}", info.sender);
+
     match info.sender.clone() {
         sender if sender == state.fyusdc_contract || sender == state.usdc_contract => (),
         _ => return Err(StdError::generic_err("Invalid sender")),
