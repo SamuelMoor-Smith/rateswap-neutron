@@ -4,7 +4,7 @@ use cosmwasm_std::{Addr, Api, Coin, StdResult, Uint128};
 
 use cw20::{Cw20Coin, Cw20ReceiveMsg};
 
-use crate::state::{Order, OrderBucket};
+use crate::state::{Order, OrderBucket, State};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -46,7 +46,6 @@ pub enum ExecuteMsg {
         order_id: String,
         price: Uint128,
     },
-
 }
 
 #[cw_serde]
@@ -117,7 +116,15 @@ pub enum QueryMsg {
     GetOrderbook {},
     #[returns(UserOrdersResponse)]
     GetUserOrders { user: Addr },
+    #[returns(StateResposne)]
+    GetState {},
 }
+
+#[cw_serde]
+pub struct StateResponse {
+    pub State: Vec<State>,
+}
+
 
 #[cw_serde]
 pub struct OrderbookResponse {
