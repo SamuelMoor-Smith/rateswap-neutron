@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     from_binary, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, StdError, SubMsg, WasmMsg, Uint128
+    StdResult, StdError, SubMsg, WasmMsg, Uint128, Decimal
 };
 
 use cw2::set_contract_version;
@@ -33,17 +33,23 @@ pub fn instantiate(
     };
     STATE.save(deps.storage, &state)?;
 
-    // Define price points
-    let mut price: f64 = 0.5;
-    while price <= 1.0 {
-        let price_str = format!("{:.3}", price);
+    // Define price points. Since Decimal has 18 fractional digits, we represent 0.5 as 500_000_000_000_000_000
+    let mut price: Decimal = Decimal::new(Uint128::from(500_000_000_000_000_000u128));
+    // 1.0 is represented as 1_000_000_000_000_000_000
+    let end: Decimal = Decimal::new(Uint128::from(1_000_000_000_000_000_000u128));
+    // 0.005 is represented as 5_000_000_000_000_000
+    let increment: Decimal = Decimal::new(Uint128::from(5_000_000_000_000_000u128));
+
+    while price <= end {
+        let price_str = price.to_string();
         let order_bucket = OrderBucket {
             price: price_str.clone(),
             bids: Vec::new(),
             asks: Vec::new(),
         };
         ORDER_BOOK.save(deps.storage, &price_str, &order_bucket)?;
-        price += 0.005;
+        // increment the price
+        price = price + increment;
     }
     Ok(Response::default())
 }
