@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use crate::error::ContractError;
 use crate::msg::{
-    CreateMsg, DetailsResponse, ExecuteMsg, InstantiateMsg, ListResponse, QueryMsg, ReceiveMsg,
+    CreateMsg, DetailsResponse, ExecuteMsg, InstantiateMsg, ListResponse, QueryMsg, ReceiveMsg, OrderbookResponse, UserOrdersResponse
 };
 use crate::state::{State, Order, OrderBucket, all_escrow_ids, Escrow, GenericBalance, ESCROWS, OrderType, STATE, ORDER_BOOK};
 
@@ -425,8 +425,47 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::List {} => to_binary(&query_list(deps)?),
         QueryMsg::Details { id } => to_binary(&query_details(deps, id)?),
+        QueryMsg::GetOrderbook {} => to_binary(&query_orderbook(deps)?),
+        QueryMsg::GetUserOrders { user } => to_binary(&query_user_orders(deps, user)?),
     }
 }
+
+pub fn query_orderbook(deps: Deps) -> StdResult<OrderbookResponse> {
+    // Initialize an empty vector to hold the results
+    let mut order_buckets: Vec<OrderBucket> = vec![];
+
+    // Iterate through the order book
+    for result in ORDER_BOOK.range(deps.storage, None, None, cosmwasm_std::Order::Ascending) {
+        let (_price, bucket) = result?;
+        order_buckets.push(bucket);
+    }
+
+    Ok(OrderbookResponse { order_bucket: order_buckets })
+}
+
+
+
+pub fn query_user_orders(deps: Deps, user: Addr) -> StdResult<UserOrdersResponse> {
+    // Initialize an empty vector to hold the results
+    let mut user_orders: Vec<Order> = vec![];
+
+    // Iterate through the order book
+    for result in ORDER_BOOK.range(deps.storage, None, None, cosmwasm_std::Order::Ascending) {
+        let (_price, bucket) = result?;
+        // Check each order in the bids and asks
+        for order in bucket.bids.iter().chain(bucket.asks.iter()) {
+            if order.owner == user {
+                user_orders.push(order.clone());
+            }
+        }
+    }
+
+    Ok(UserOrdersResponse { orders: user_orders })
+}
+
+
+
+
 
 fn query_details(deps: Deps, id: String) -> StdResult<DetailsResponse> {
     let escrow = ESCROWS.load(deps.storage, &id)?;
