@@ -11,13 +11,14 @@ use std::collections::HashMap;
 
 use crate::error::ContractError;
 use crate::msg::{
-    CreateMsg, DetailsResponse, ExecuteMsg, InstantiateMsg, ListResponse, QueryMsg, ReceiveMsg, OrderbookResponse, UserOrdersResponse
+    CreateMsg, DetailsResponse, ExecuteMsg, InstantiateMsg, ListResponse, QueryMsg, ReceiveMsg, OrderbookResponse, UserOrdersResponse, StateResponse
 };
 use crate::state::{State, Order, OrderBucket, all_escrow_ids, Escrow, GenericBalance, ESCROWS, OrderType, STATE, ORDER_BOOK};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw20-escrow";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -94,7 +95,7 @@ pub fn execute_receive(
     });
 
     match info.sender.clone() {
-        sender if sender == state.fyusdc_contract || sender == state.usdc_contract => (),
+        sender if sender != state.fyusdc_contract || sender != state.usdc_contract => (),
         _ => return Err(StdError::generic_err("Invalid sender")),
     }
     
@@ -421,6 +422,7 @@ fn send_tokens(to: &Addr, balance: &GenericBalance) -> StdResult<Vec<SubMsg>> {
     Ok(msgs)
 }
 
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
@@ -428,8 +430,18 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Details { id } => to_binary(&query_details(deps, id)?),
         QueryMsg::GetOrderbook {} => to_binary(&query_orderbook(deps)?),
         QueryMsg::GetUserOrders { user } => to_binary(&query_user_orders(deps, user)?),
+        QueryMsg::GetState {} => to_binary(&query_state(deps)?)
     }
 }
+
+pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
+    // Initialize an empty vector to hold the results
+    let mut State: Vec<State> = vec![];
+
+
+    Ok(StateResponse { State:State })
+}
+
 
 pub fn query_orderbook(deps: Deps) -> StdResult<OrderbookResponse> {
     // Initialize an empty vector to hold the results
