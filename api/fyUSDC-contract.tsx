@@ -66,7 +66,21 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             return buyOrder;
         }
 
-        return { checkBalance, placeBuyOrder };
+        async function placeSellOrder(amount: string, quantity: string, price: string) {
+            const X_CLIENT = await getFyUSDCCLient();
+
+            const msg_string = `{"create_bid":{"quantity":"${quantity}","price":"${price}","orderer":"${address!}"}}`;
+            const msg = Buffer.from(msg_string).toString('base64');
+
+            let buyOrder = await X_CLIENT.send({
+                "amount": amount, 
+                "contract": ORDER_BOOK_CONTRACT_ADDRESS, 
+                "msg": msg}, calculateFee(500000, GasPrice.fromString("0.01untrn")));
+            console.log(buyOrder);
+            return buyOrder;
+        }
+
+        return { checkBalance, placeBuyOrder, placeSellOrder };
     } else {
         return {};
     }
