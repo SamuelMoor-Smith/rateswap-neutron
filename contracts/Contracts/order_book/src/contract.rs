@@ -546,56 +546,38 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::List {} => to_binary(&query_list(deps)?),
         QueryMsg::Details { id } => to_binary(&query_details(deps, id)?),
-        QueryMsg::GetOrderbook {} => to_binary(&query_orderbook(deps)?),
-        QueryMsg::GetUserOrders { user } => to_binary(&query_user_orders(deps, user)?),
-        QueryMsg::GetState {} => to_binary(&query_state(deps)?)
+        QueryMsg::GetCollateral { address } => to_binary(&query_collateral(deps, address)?),
+        QueryMsg::GetLoan { address } => to_binary(&query_loan(deps, address)?),
+        QueryMsg::GetPrices {} => to_binary(&query_prices(deps)?)
     }
 }
 
-pub fn query_state(deps: Deps) -> StdResult<StateResponse> {
-    // Load state from storage
-    let state = STATE.load(deps.storage)?;
 
-    // Put it in a vector, since your response expects a vector
-    let State: Vec<State> = vec![state];
-
-    Ok(StateResponse { State })
+fn query_collateral(deps: Deps, address: Addr) -> StdResult<CollateralResponse> {
+    let balance = COLLATERALS.load(deps.storage, &address)?;
+    Ok(CollateralResponse {
+        address,
+        balance,
+    })
 }
 
-
-pub fn query_orderbook(deps: Deps) -> StdResult<OrderbookResponse> {
-    // Initialize an empty vector to hold the results
-    let mut order_buckets: Vec<OrderBucket> = vec![];
-
-    // Iterate through the order book
-    for result in ORDER_BOOK.range(deps.storage, None, None, cosmwasm_std::Order::Ascending) {
-        let (_price, bucket) = result?;
-        order_buckets.push(bucket);
-    }
-
-    Ok(OrderbookResponse { order_bucket: order_buckets })
+fn query_loan(deps: Deps, address: Addr) -> StdResult<LoanResponse> {
+    let balance = LOANS.load(deps.storage, &address)?;
+    Ok(LoanResponse {
+        address,
+        balance,
+    })
 }
 
+pub fn query_prices(_deps: Deps) -> StdResult<PricesResponse> {
+    // Hard-coded prices
+    let prices = PricesResponse {
+        atom: Decimal::one(),
+        usdc: Decimal::one(),
+    };
 
-
-pub fn query_user_orders(deps: Deps, user: Addr) -> StdResult<UserOrdersResponse> {
-    // Initialize an empty vector to hold the results
-    let mut user_orders: Vec<Order> = vec![];
-
-    // Iterate through the order book
-    for result in ORDER_BOOK.range(deps.storage, None, None, cosmwasm_std::Order::Ascending) {
-        let (_price, bucket) = result?;
-        // Check each order in the bids and asks
-        for order in bucket.bids.iter().chain(bucket.asks.iter()) {
-            if order.owner == user {
-                user_orders.push(order.clone());
-            }
-        }
-    }
-
-    Ok(UserOrdersResponse { orders: user_orders })
+    Ok(prices)
 }
-
 
 
 
