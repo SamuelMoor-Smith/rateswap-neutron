@@ -34,7 +34,7 @@ export const CosmosService = (wallet: Wallet | undefined) => {
         async function getOrderBook() {
             const Q_CLIENT = await getFyUSDCQueryClient();
             let orderBook = await Q_CLIENT.getOrderbook()
-            console.log(orderBook);
+            // console.log(orderBook);
             return orderBook;
         }
 

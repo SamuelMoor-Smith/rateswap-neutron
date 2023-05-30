@@ -55,7 +55,7 @@ export const CosmosService = (wallet: Wallet | undefined) => {
         async function placeBuyOrder(amount: string, quantity: string, price: string) {
             const X_CLIENT = await getFyUSDCCLient();
 
-            const msg_string = `{"create_ask":{"quantity":"${quantity}","price":"${price}","orderer":"${address!}"}}`;
+            const msg_string = `{"create_bid":{"quantity":"${quantity}","price":"${price}","orderer":"${address!}"}}`;
             const msg = Buffer.from(msg_string).toString('base64');
 
             let buyOrder = await X_CLIENT.send({
@@ -69,7 +69,7 @@ export const CosmosService = (wallet: Wallet | undefined) => {
         async function placeSellOrder(amount: string, quantity: string, price: string) {
             const X_CLIENT = await getFyUSDCCLient();
 
-            const msg_string = `{"create_bid":{"quantity":"${quantity}","price":"${price}","orderer":"${address!}"}}`;
+            const msg_string = `{"create_ask":{"quantity":"${quantity}","price":"${price}","orderer":"${address!}"}}`;
             const msg = Buffer.from(msg_string).toString('base64');
 
             let buyOrder = await X_CLIENT.send({
