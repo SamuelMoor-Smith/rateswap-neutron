@@ -4,7 +4,6 @@ use cosmwasm_std::{Addr, Api, Coin, StdResult, Uint128, Decimal};
 
 use cw20::{Cw20Coin, Cw20ReceiveMsg, Expiration};
 
-use crate::state::{Order, OrderBucket, State};
 
 #[cw_serde]
 pub struct InstantiateMsg {
