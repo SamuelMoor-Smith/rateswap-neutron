@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     from_binary, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, StdError, SubMsg, WasmMsg, Uint128, Decimal, CosmosMsg, Attribute
+    StdResult, StdError, SubMsg, WasmMsg, Uint128, Decimal, CosmosMsg, Attribute, Timestamp
 };
 
 use cw2::set_contract_version;
@@ -28,8 +28,7 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     let state = State {
         contract_owner: _info.sender,
-        authorized_checker: _msg.authorized_checker,
-        liquidation_deadline: _msg.liquidation_deadline,
+        liquidation_deadline: Expiration::AtTime(Timestamp::from_seconds(_msg.liquidation_deadline)),
         liquidator: _msg.liquidator,
         fyusdc_contract: _msg.fyusdc_contract,
         usdc_contract: _msg.usdc_contract,
