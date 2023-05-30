@@ -11,9 +11,9 @@ use std::collections::HashMap;
 
 use crate::error::ContractError;
 use crate::msg::{
-    CreateMsg, DetailsResponse, ExecuteMsg, InstantiateMsg, ListResponse, QueryMsg, ReceiveMsg, OrderbookResponse, UserOrdersResponse, StateResponse
+    CreateMsg, DetailsResponse, ExecuteMsg, InstantiateMsg, ListResponse, QueryMsg, ReceiveMsg, CollateralResponse, LoanResponse, PricesResponse
 };
-use crate::state::{State, Order, OrderBucket, all_escrow_ids, Escrow, GenericBalance, ESCROWS, OrderType, STATE, ORDER_BOOK, ORDERS};
+use crate::state::{ all_escrow_ids, Escrow, GenericBalance, ESCROWS, State, STATE, COLLATERALS, LOANS, CONTRACT_USDC_BALANCE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw20-escrow";
@@ -27,31 +27,20 @@ pub fn instantiate(
     _msg: InstantiateMsg,
 ) -> StdResult<Response> {
     let state = State {
-        fyusdc_contract: deps.api.addr_validate(&_msg.fyusdc_contract)?,
-        usdc_contract: deps.api.addr_validate(&_msg.usdc_contract)?,
-        max_order_id: 0,
+        contract_owner: _info.sender,
+        liquidation_deadline: Expiration::AtTime(Timestamp::from_seconds(_msg.liquidation_deadline)),
+        liquidator: _msg.liquidator,
+        fyusdc_contract: _msg.fyusdc_contract,
+        usdc_contract: _msg.usdc_contract,
+        liquidation_threshold: _msg.liquidation_threshold,
+        liquidation_penalty: _msg.liquidation_penalty,
+        atom_contract: _msg.atom_contract,
     };
+
     STATE.save(deps.storage, &state)?;
+    CONTRACT_USDC_BALANCE.save(deps.storage, &Uint128::zero())?;
 
-    // Define price points. Since Decimal has 18 fractional digits, we represent 0.5 as 500_000_000_000_000_000
-    let mut price: Decimal = Decimal::new(Uint128::from(500_000_000_000_000_000u128));
-    // 1.0 is represented as 1_000_000_000_000_000_000
-    let end: Decimal = Decimal::new(Uint128::from(1_000_000_000_000_000_000u128));
-    // 0.005 is represented as 5_000_000_000_000_000
-    let increment: Decimal = Decimal::new(Uint128::from(5_000_000_000_000_000u128));
-
-    while price <= end {
-        let price_str = price.to_string();
-        let order_bucket = OrderBucket {
-            price: price_str.clone(),
-            bids: Vec::new(),
-            asks: Vec::new(),
-        };
-        ORDER_BOOK.save(deps.storage, &price_str, &order_bucket)?;
-        // increment the price
-        price = price + increment;
-    }
-    Ok(Response::default())
+    Ok(Response::new())
 }
 
 
@@ -73,12 +62,8 @@ pub fn execute(
         ExecuteMsg::TopUp { id } => execute_top_up(deps, id, Balance::from(info.funds)),
         ExecuteMsg::Refund { id } => execute_refund(deps, env, info, id),
         ExecuteMsg::Receive(msg) => execute_receive(deps, env, info, msg),
-        ExecuteMsg::CancelBid { order_id, price } => cancel_bid(deps, info, order_id, price),
-        ExecuteMsg::CancelAsk { order_id, price } => cancel_ask(deps, info, order_id, price),
-        ExecuteMsg::UpdateBidOrder { id, new_quantity } => update_bid_order(deps, env, info, id, new_quantity),
-        ExecuteMsg::UpdateAskOrder { id, new_quantity } => update_ask_order(deps, env, info, id, new_quantity),
-        //ExecuteMsg::MatchOrders {} => match_orders(deps, env, info),
-
+        ExecuteMsg::Withdraw { amount } => withdraw_collateral(deps, env, info, amount),
+        ExecuteMsg::Borrow { amount } => borrow(deps, env, info, amount),
     }
 }
 
@@ -95,282 +80,272 @@ pub fn execute_receive(
         address: info.sender.clone(),     
     });
 
-    println!("info.sender: {:?}", info.sender);
-    println!("State: {:?}",state.fyusdc_contract);
-    println!("jeff");
-
     match &info.sender.clone() {
-        sender if sender == state.fyusdc_contract || sender == state.usdc_contract => (),
+        sender if sender == state.fyusdc_contract || sender == state.usdc_contract || sender == state.atom_contract => (),
         _ => return Err(StdError::generic_err("Invalid sender")),
     }
 
-    
     let api = deps.api;
-    match msg {
-        ReceiveMsg::Create(msg) => {
-            execute_create(deps, msg, balance, &api.addr_validate(&wrapper.sender)?)
+    if info.sender == state.atom_contract {
+        match msg {
+            ReceiveMsg::Deposit { orderer} => deposit_collateral(deps, env, info, orderer, wrapper.amount),
+            _ => Err(StdError::generic_err("Invalid operation for atom contract")),
         }
-        ReceiveMsg::TopUp { id } => execute_top_up(deps, id, balance),
-        ReceiveMsg::CreateAsk { orderer, quantity, price } => create_ask(deps, env, info, wrapper, orderer, price, quantity),
-        ReceiveMsg::CreateBid { orderer, quantity, price } => create_bid(deps, env, info, wrapper, orderer, price, quantity),
-
-
+    } else if info.sender == state.usdc_contract {
+        match msg {
+            ReceiveMsg::Repay { orderer } => repay_loan(deps, env, info, orderer, wrapper.amount),
+            _ => Err(StdError::generic_err("Invalid operation for USDC contract")),
+        }
+    } else if info.sender == state.fyusdc_contract {
+        match msg {
+            ReceiveMsg::Redeem { orderer } => try_withdraw_usdc(deps, env, info, orderer, wrapper.amount),
+            _ => Err(StdError::generic_err("Invalid operation for fyUSDC contract")),
+        }
+    } else {
+        match msg {
+            ReceiveMsg::Create(msg) => {
+                execute_create(deps, msg, balance, &api.addr_validate(&wrapper.sender)?)
+            }
+            ReceiveMsg::TopUp { id } => execute_top_up(deps, id, balance),
+            _ => Err(StdError::generic_err("Invalid operation")),
+        }
     }
 }
 
 
 
-
-fn create_bid(
-    mut deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    wrapper: Cw20ReceiveMsg,
-    orderer: Addr,
-    price: Decimal,
-    quantity: Uint128,
-) -> StdResult<Response> {
-    // Load state
-    let state = STATE.load(deps.storage)?;
-
-    // Check that the user has sent enough USDC
-    let required_balance = price * quantity;
-    if wrapper.amount != required_balance {
-        return Err(StdError::generic_err("Insufficient funds sent"));
-    }
-
-    // Create and add the bid order to the orderbook
-    let order_id = generate_order_id( &mut deps)?;
-    let order = Order {
-        id: order_id.clone(),
-        owner: info.sender.clone(),
-        orderer: orderer,
-        price,
-        quantity: quantity,
-        Type: "Bid".to_string()
-    };
-
-    // Load the order bucket for the price point from the orderbook
-    let mut bucket = ORDER_BOOK.load(deps.storage, &format!("{}", price))?;
-    // Add a cloned order to the bucket and save it back to the orderbook
-    bucket.add_order(order.clone(), OrderType::Bid);
-    ORDER_BOOK.save(deps.storage, &format!("{}", price), &bucket)?;
-    ORDERS.save(deps.storage, &order.id, &order)?;
-
-
-    Ok(Response::new()
-        .add_attribute("action", "create_bid")
-        .add_attribute("order_id", order_id))
-}
-
-fn create_ask(
-    mut deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    wrapper: Cw20ReceiveMsg,
-    orderer: Addr,
-    price: Decimal,
-    quantity: Uint128,
-) -> StdResult<Response> {
-    // Load state
-    let state = STATE.load(deps.storage)?;
-
-    // Check that the user has sent enough fyUSDC
-    let required_balance = quantity;
-    if wrapper.amount != required_balance {
-        return Err(StdError::generic_err("Insufficient funds sent"));
-    }
-
-    // Create and add the bid order to the orderbook
-    let order_id = generate_order_id( &mut deps)?;
-    let order = Order {
-        id: order_id.clone(),
-        owner: info.sender.clone(),
-        orderer: orderer,
-        price,
-        quantity: quantity,
-        Type: "Ask".to_string()
-    };
-
-    // Load the order bucket for the price point from the orderbook
-    let mut bucket = ORDER_BOOK.load(deps.storage, &format!("{}", price))?;
-    // Add the order to the bucket and save it back to the orderbook
-    bucket.add_order(order.clone(), OrderType::Ask);
-    ORDER_BOOK.save(deps.storage, &format!("{}", price), &bucket)?;
-    ORDERS.save(deps.storage, &order.id, &order)?;
-
-
-    Ok(Response::new()
-        .add_attribute("action", "create_ask")
-        .add_attribute("order_id", order_id))
-}
-
-pub fn cancel_bid(
-    mut deps: DepsMut,
-    info: MessageInfo,
-    order_id: String,
-    price: Decimal,
-) -> StdResult<Response> {
-    // Load the order bucket for the price point from the orderbook
-    let mut bucket = ORDER_BOOK.load(deps.storage, &format!("{}", price))?;
-
-    // Check if the order exists and the sender is the owner
-    match bucket.bids.iter().find(|order| order.id == order_id) {
-        Some(order) if order.orderer == info.sender => {
-            bucket.remove_order(&order_id)?;
-            ORDER_BOOK.save(deps.storage, &format!("{}", price), &bucket)?;
-
-            // Also remove the order from the ORDERS map
-            ORDERS.remove(deps.storage, &order_id);
-
-            Ok(Response::new().add_attribute("action", "cancel_bid").add_attribute("order_id", order_id))
-        },
-        _ => Err(StdError::generic_err("Order does not exist or the sender is not the owner")),
-    }
-}
-
-pub fn cancel_ask(
+fn deposit_collateral(
     deps: DepsMut,
+    _env: Env,
     info: MessageInfo,
-    order_id: String,
-    price: Decimal,
+    orderer: Addr,
+    amount: Uint128,
+) -> Result<Response, StdError> {
+    // Load user's collateral from storage
+    let mut collateral = COLLATERALS.load(deps.storage, &orderer)?;
+
+
+    // Add the deposited amount to the user's collateral
+    collateral += amount;
+
+    // Save the updated collateral amount to storage
+    COLLATERALS.save(deps.storage, &orderer, &collateral)?;
+
+
+    // Return a successful response
+    Ok(Response::new().add_attributes(vec![
+        Attribute::new("action", "deposit_collateral"),
+        Attribute::new("sender", orderer),
+        Attribute::new("collateral_amount", amount),
+    ]))
+}
+
+
+pub fn withdraw_collateral(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    amount: Uint128,
+) -> Result<Response, StdError> {
+    let state = STATE.load(deps.storage)?;
+    let liquidation_threshold = state.liquidation_threshold;
+    let mut collateral = COLLATERALS.load(deps.storage, &info.sender)?;
+
+    // Query prices for USDC and ATOM
+    let prices_response = query_prices(deps.as_ref())?;
+
+    // Calculate the new collateral balance after withdrawal
+    let collateral_usd = (collateral - amount) * prices_response.atom;
+
+    // Retrieve the borrower's loan balance
+    let loan = LOANS.load(deps.storage, &info.sender)?;
+    let loan_usd = loan * prices_response.usdc;
+
+    // Calculate the new collateralization ratio
+    let new_collateralization_ratio = if loan == Uint128::zero() {
+        Decimal::one()
+    } else {
+        Decimal::from_ratio(collateral_usd, loan_usd)
+    };
+
+    // Check if the new collateralization ratio is above the liquidation threshold
+    if new_collateralization_ratio < liquidation_threshold {
+        return Err(StdError::generic_err("Withdrawal would trigger liquidation"));
+    }
+
+    // Decrease collateral
+    collateral -= amount;
+    COLLATERALS.save(deps.storage, &info.sender, &collateral)?;
+
+    // Create CW20 Transfer message
+    let transfer_msg = Cw20ExecuteMsg::Transfer {
+        recipient: info.sender.to_string(),
+        amount,
+    };
+
+    let cosmos_msg = WasmMsg::Execute {
+        contract_addr: state.atom_contract.to_string(), // Assume this is the ATOM CW20 contract address
+        msg: to_binary(&transfer_msg)?,
+        funds: vec![],
+    };
+
+    Ok(Response::new()
+        .add_message(cosmos_msg)
+        .add_attributes(vec![
+            Attribute::new("action", "withdraw_collateral"),
+            Attribute::new("sender", info.sender),
+            Attribute::new("collateral_amount", amount),
+        ]))
+}
+
+pub fn borrow(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    amount: Uint128,
+) -> Result<Response, StdError> {
+    // Load user's collateral and loan from storage
+    let mut collateral = COLLATERALS.load(deps.storage, &info.sender)?;
+    let mut loan = LOANS.load(deps.storage, &info.sender)?;
+
+    // Load the state
+    let state = STATE.load(deps.storage)?;
+
+    // Query prices for USDC and ATOM
+    let prices_response = query_prices(deps.as_ref())?;
+
+    // Convert loan balance and collateral balance to USD value
+    let collateral_balance_usd = collateral * prices_response.atom;
+
+    // Calculate the maximum amount the user can borrow
+    let max_borrow = collateral_balance_usd * Uint128::new(50) / Uint128::new(100);
+
+    // Check if the user can borrow the requested amount
+    if loan + amount > max_borrow {
+        return Err(StdError::generic_err("Insufficient collateral to borrow this amount"));
+    }
+
+    // Add the borrowed amount to the user's loan
+    loan += amount;
+
+    //Mint borrower amount number of fyUSDC * fyUSDC price, which we need to get from the order book
+    // Mint the amount of fyUSDC tokens to the user
+    let fyusdc_contract_address = state.fyusdc_contract.to_string();
+    let cw20_msg = Cw20ExecuteMsg::Mint {
+        recipient: info.sender.to_string(),
+        amount,
+    };
+    let cosmos_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: fyusdc_contract_address.to_string(),
+        msg: to_binary(&cw20_msg)?,
+        funds: vec![],
+    });
+    // Save the updated loan amount to storage
+    LOANS.save(deps.storage, &info.sender, &loan)?;
+
+
+    // Return a successful response
+    Ok(Response::new()
+        .add_message(cosmos_msg)
+        .add_attribute("action", "borrow"))
+}
+
+
+fn repay_loan(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    orderer: Addr,
+    amount: Uint128,
+) -> Result<Response, StdError> {
+    // Load user's loan from storage
+    let mut collateral = COLLATERALS.load(deps.storage, &orderer)?;
+    let mut loan = LOANS.load(deps.storage, &orderer)?;
+    let state = STATE.load(deps.storage)?;
+
+    // Check if the user has a loan to repay
+    if loan.is_zero() {
+        return Err(StdError::generic_err("No outstanding loan to repay"));
+    }
+
+    // Subtract the repaid amount from the user's loan
+    if amount >= loan {
+        // If the repaid amount is greater or equal to the outstanding loan, set the loan to zero
+        loan = Uint128::zero();
+    } else {
+        // Otherwise, subtract the repaid amount from the loan
+        loan -= amount;
+    }
+
+     // Save the updated loan amount to storage
+    LOANS.save(deps.storage, &info.sender, &loan)?;
+
+    //Save the repaid amount in the contract's storage
+    let contract_usdc_balance = CONTRACT_USDC_BALANCE.load(deps.storage)?;
+    CONTRACT_USDC_BALANCE.save(deps.storage, &(contract_usdc_balance + amount))?;
+
+    Ok(Response::new()
+        .add_attribute("action", "repay_loan")
+    )
+}
+
+fn try_withdraw_usdc(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    orderer: Addr,
+    token_amount: Uint128,
 ) -> StdResult<Response> {
-    // Load the order bucket for the price point from the orderbook
-    let mut bucket = ORDER_BOOK.load(deps.storage, &format!("{}", price))?;
+    // Verify if the current block time is past the liquidation deadline
+    let state = STATE.load(deps.storage)?;
 
-    // Check if the order exists and the sender is the owner
-    match bucket.asks.iter().find(|order| order.id == order_id) {
-        Some(order) if order.orderer == info.sender => {
-            bucket.remove_order(&order_id)?;
-            ORDER_BOOK.save(deps.storage, &format!("{}", price), &bucket)?;
-            
-            // Also remove the order from the ORDERS map
-            ORDERS.remove(deps.storage, &order_id);
-
-            Ok(Response::new().add_attribute("action", "cancel_ask").add_attribute("order_id", order_id))
+    match state.liquidation_deadline {
+        Expiration::AtTime(liquidation_timestamp) if env.block.time < liquidation_timestamp => {
+            return Err(StdError::generic_err("Withdrawal is not allowed before the liquidation deadline"));
         },
-        _ => Err(StdError::generic_err("Order does not exist or the sender is not the owner")),
-    }
-}
-
-pub fn update_bid_order(
-    mut deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    id: String,
-    new_quantity: Uint128,
-) -> StdResult<Response> {
-    // Load state
-    let state = STATE.load(deps.storage)?;
-
-    // Get the order by its ID
-    let mut order = ORDERS.load(deps.storage, &id)?;
-
-    // Ensure the sender is the order's owner
-    if order.orderer != info.sender {
-        return Err(StdError::generic_err("Sender must be the order's owner"));
+        _ => {},
     }
 
-    // Ensure the new quantity is lower than the current quantity
-    if new_quantity > order.quantity {
-        return Err(StdError::generic_err("New quantity must be lower than the current quantity"));
+
+    // Check the contract's USDC balance to ensure it has enough tokens to cover the withdrawal
+    let usdc_balance = CONTRACT_USDC_BALANCE.load(deps.storage)?;
+    if usdc_balance < token_amount {
+        return Err(StdError::generic_err("Not enough USDC tokens in the contract to cover the withdrawal"));
     }
 
-    // Get the order bucket using the order's price
-    let mut bucket = ORDER_BOOK.load(deps.storage, &order.price.to_string())?;
+    // Update the contract's USDC balance
+    CONTRACT_USDC_BALANCE.save(deps.storage, &(usdc_balance - token_amount))?;
 
-    // Find the order in the bucket and update its quantity
-    for bid in &mut bucket.bids {
-        if bid.id == id {
-            bid.quantity = new_quantity;
-            break;
-        }
-    }
 
-    // Save the updated order and bucket
-    order.quantity = new_quantity;
-    ORDERS.save(deps.storage, &id, &order)?;
-    ORDER_BOOK.save(deps.storage, &order.price.to_string(), &bucket)?;
-
-    // Return excess tokens to the owner
-    let excess_amount = order.quantity.checked_sub(new_quantity)?;
-    let transfer_msg = Cw20ExecuteMsg::Transfer {
+    // Send USDC tokens to the user
+    let usdc_contract_address = state.usdc_contract.to_string();
+    let cw20_msg = Cw20ExecuteMsg::Transfer {
         recipient: info.sender.to_string(),
-        amount: excess_amount,
+        amount: token_amount,
     };
-    let cosmos_msg = WasmMsg::Execute {
-        contract_addr: state.usdc_contract.to_string(),
-        msg: to_binary(&transfer_msg)?,
+    let cosmos_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: usdc_contract_address,
+        msg: to_binary(&cw20_msg)?,
         funds: vec![],
+    });
+
+    // Burn the fyUSDC tokens
+    let fyusdc_contract_address = state.fyusdc_contract.to_string();
+    let cw20_burn_msg = Cw20ExecuteMsg::Burn {
+        amount: token_amount,
     };
-    let cosmos_response = Response::new()
+    let cosmos_burn_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: fyusdc_contract_address,
+        msg: to_binary(&cw20_burn_msg)?,
+        funds: vec![],
+    });
+
+    Ok(Response::new()
         .add_message(cosmos_msg)
-        .add_attribute("action", "update_bid_order")
-        .add_attribute("order_id", &id)
-        .add_attribute("new_quantity", &new_quantity.to_string());
-    
-    Ok(cosmos_response)
+        .add_message(cosmos_burn_msg)
+        .add_attribute("action", "withdraw_usdc"))
 }
 
-
-pub fn update_ask_order(
-    mut deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    id: String,
-    new_quantity: Uint128,
-) -> StdResult<Response> {
-    // Load state
-    let state = STATE.load(deps.storage)?;
-
-    // Get the order by its ID
-    let mut order = ORDERS.load(deps.storage, &id)?;
-
-    // Ensure the sender is the order's owner
-    if order.orderer != info.sender {
-        return Err(StdError::generic_err("Sender must be the order's owner"));
-    }
-
-    // Ensure the new quantity is lower than the current quantity
-    if new_quantity > order.quantity {
-        return Err(StdError::generic_err("New quantity must be lower than the current quantity"));
-    }
-
-    // Get the order bucket using the order's price
-    let mut bucket = ORDER_BOOK.load(deps.storage, &order.price.to_string())?;
-
-    // Find the order in the bucket and update its quantity
-    for ask in &mut bucket.asks {
-        if ask.id == id {
-            ask.quantity = new_quantity;
-            break;
-        }
-    }
-
-    // Save the updated order and bucket
-    order.quantity = new_quantity;
-    ORDERS.save(deps.storage, &id, &order)?;
-    ORDER_BOOK.save(deps.storage, &order.price.to_string(), &bucket)?;
-
-    // Return excess tokens to the owner
-    let excess_amount = order.quantity.checked_sub(new_quantity)?;
-    let transfer_msg = Cw20ExecuteMsg::Transfer {
-        recipient: info.sender.to_string(),
-        amount: excess_amount,
-    };
-    let cosmos_msg = WasmMsg::Execute {
-        contract_addr: state.usdc_contract.to_string(),
-        msg: to_binary(&transfer_msg)?,
-        funds: vec![],
-    };
-    let cosmos_response = Response::new()
-        .add_message(cosmos_msg)
-        .add_attribute("action", "update_ask_order")
-        .add_attribute("order_id", &id)
-        .add_attribute("new_quantity", &new_quantity.to_string());
-    
-    Ok(cosmos_response)
-}
 
 pub fn execute_create(
     deps: DepsMut,
