@@ -10,7 +10,68 @@ use cw_storage_plus::Item;
 use std::collections::HashMap;
 
 
-use cw20::{Balance, Cw20CoinVerified};
+use cw20::{Balance, Cw20CoinVerified, Expiration};
+
+
+// State of the contract
+#[cw_serde]
+pub struct State {
+    pub contract_owner: Addr,
+    pub liquidation_deadline: Expiration,
+    pub liquidator: Addr,
+    pub liquidation_threshold: Decimal,
+    pub liquidation_penalty: Decimal,
+    pub fyusdc_contract: Addr,
+    pub usdc_contract: Addr,
+    pub atom_contract: Addr,
+
+}
+
+impl State {
+    // function to update state
+    pub fn update(
+        &mut self,
+        caller: &Addr,
+        new_authorized_checker: Option<Addr>,
+        new_liquidation_deadline: Option<Expiration>,
+        new_liquidator: Option<Addr>,
+        new_order_manager_contract: Option<Addr>,
+        new_liquidation_threshold: Option<Decimal>,
+        new_liquidation_penalty: Option<Decimal>,
+        new_fyusdc_contract: Option<Addr>,
+    ) -> StdResult<()> {  
+        if caller != &self.contract_owner {
+            return Err(StdError::generic_err("Unauthorized"));  
+        }
+        if let Some(deadline) = new_liquidation_deadline {
+            self.liquidation_deadline = deadline;
+        }
+        if let Some(liquidator) = new_liquidator {
+            self.liquidator = liquidator;
+        }
+        if let Some(threshold) = new_liquidation_threshold {
+            self.liquidation_threshold = threshold;
+        }
+        if let Some(penalty) = new_liquidation_penalty {
+            self.liquidation_penalty = penalty;
+        }
+        if let Some(fyusdc) = new_fyusdc_contract {
+            self.fyusdc_contract = fyusdc;
+        }
+        Ok(())
+    }
+}
+
+
+// Added constant for state storage
+pub const STATE: Item<State> = Item::new("state");
+pub const COLLATERALS: Map<&Addr, Uint128> = Map::new("collaterals");
+pub const LOANS: Map<&Addr, Uint128> = Map::new("loans");
+pub const CONTRACT_USDC_BALANCE: Item<Uint128> = Item::new("contract_usdc_balance");
+
+
+
+
 
 #[cw_serde]
 #[derive(Default)]
@@ -56,67 +117,6 @@ impl GenericBalance {
     }
 }
 
-#[cw_serde]
-pub struct State {
-    pub fyusdc_contract: Addr,
-    pub usdc_contract: Addr,
-    pub max_order_id: u64,
-}
-
-pub static STATE: Item<State> = Item::new("state");
-pub static ORDER_BOOK: Map<&str, OrderBucket> = Map::new("order_book");
-pub static ORDERS: Map<&str, Order> = Map::new("orders");
-
-
-
-#[cw_serde]
-pub struct OrderBucket {
-    pub price: String,
-    pub bids: Vec<Order>,
-    pub asks: Vec<Order>,
-}
-
-impl OrderBucket {
-    pub fn add_order(&mut self, order: Order, order_type: OrderType) {
-        match order_type {
-            OrderType::Bid => self.bids.push(order),
-            OrderType::Ask => self.asks.push(order),
-        }
-    }
-
-    pub fn remove_order(&mut self, order_id: &str) -> StdResult<()> {
-        let bid_position = self.bids.iter().position(|order| order.id == order_id);
-        let ask_position = self.asks.iter().position(|order| order.id == order_id);
-
-        match (bid_position, ask_position) {
-            (Some(bid_idx), None) => {
-                self.bids.remove(bid_idx);
-                Ok(())
-            }
-            (None, Some(ask_idx)) => {
-                self.asks.remove(ask_idx);
-                Ok(())
-            }
-            (_, _) => Err(StdError::generic_err("Order does not exist in the bucket")),
-        }
-    }
-}
-
-pub enum OrderType {
-    Bid,
-    Ask,
-}
-
-
-#[cw_serde]
-pub struct Order {
-    pub id: String,
-    pub owner: Addr,
-    pub quantity: Uint128,
-    pub price: Decimal,
-    pub Type: String,
-    pub orderer: Addr
-}
 
 
 
@@ -175,4 +175,5 @@ pub fn all_escrow_ids(storage: &dyn Storage) -> StdResult<Vec<String>> {
         .keys(storage, None, None, cOrder::Ascending)
         .collect()
 }
+
 
