@@ -7,8 +7,7 @@ use cw20::{Cw20Coin, Cw20ReceiveMsg, Expiration};
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub authorized_checker: Addr,
-    pub liquidation_deadline: Expiration,
+    pub liquidation_deadline: u64,
     pub liquidator: Addr,
     pub fyusdc_contract: Addr,
     pub usdc_contract: Addr,
