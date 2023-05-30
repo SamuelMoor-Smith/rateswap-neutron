@@ -1,8 +1,1 @@
-C:\Users\jrkro\cosmwasm_1\rate_swap_osmo\contracts\order_book\target\debug\examples\schema.exe: examples\schema.rs
-
-C:\Users\jrkro\cosmwasm_1\rate_swap_osmo\contracts\order_book\target\debug\examples\schema.d: examples\schema.rs
-
-examples\schema.rs:
-
-# env-dep:CARGO_PKG_NAME=cw20-escrow
-# env-dep:CARGO_PKG_VERSION=0.14.2
+/Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/target/debug/examples/schema: /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/examples/schema.rs /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/src/contract.rs /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/src/error.rs /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/src/integration_test.rs /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/src/lib.rs /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/src/msg.rs /Users/samuelmoor-smith/rateswap-osmosis/contracts/Contracts/order_book/src/state.rs
