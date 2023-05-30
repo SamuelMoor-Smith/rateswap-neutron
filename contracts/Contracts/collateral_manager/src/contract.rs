@@ -88,17 +88,17 @@ pub fn execute_receive(
     let api = deps.api;
     if info.sender == state.atom_contract {
         match msg {
-            ReceiveMsg::Deposit { orderer, .. } => deposit_collateral(deps, env, info, orderer, wrapper.amount),
+            ReceiveMsg::Deposit { orderer} => deposit_collateral(deps, env, info, orderer, wrapper.amount),
             _ => Err(StdError::generic_err("Invalid operation for atom contract")),
         }
     } else if info.sender == state.usdc_contract {
         match msg {
-            ReceiveMsg::Repay { orderer, .. } => repay_loan(deps, env, info, orderer, wrapper.amount),
+            ReceiveMsg::Repay { orderer } => repay_loan(deps, env, info, orderer, wrapper.amount),
             _ => Err(StdError::generic_err("Invalid operation for USDC contract")),
         }
     } else if info.sender == state.fyusdc_contract {
         match msg {
-            ReceiveMsg::Redeem { orderer, .. } => try_withdraw_usdc(deps, env, info, orderer, wrapper.amount),
+            ReceiveMsg::Redeem { orderer } => try_withdraw_usdc(deps, env, info, orderer, wrapper.amount),
             _ => Err(StdError::generic_err("Invalid operation for fyUSDC contract")),
         }
     } else {
