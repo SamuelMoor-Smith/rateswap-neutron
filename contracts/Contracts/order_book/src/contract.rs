@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 
 use cw2::set_contract_version;
-use cw20::{Balance, Cw20Coin, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg};
+use cw20::{Balance, Cw20Coin, Cw20CoinVerified, Cw20ExecuteMsg, Cw20ReceiveMsg, Expiration};
 use std::collections::HashMap;
 
 use crate::error::ContractError;
