@@ -20,12 +20,10 @@ pub struct State {
     pub authorized_checker: Addr,
     pub liquidation_deadline: Expiration,
     pub liquidator: Addr,
-    pub order_manager_contract: Addr,
     pub liquidation_threshold: Decimal,
     pub liquidation_penalty: Decimal,
     pub fyusdc_contract: Addr,
     pub usdc_contract: Addr,
-    pub rsp_contract: Addr,
     pub atom_contract: Addr,
 
 }
@@ -54,9 +52,6 @@ impl State {
         }
         if let Some(liquidator) = new_liquidator {
             self.liquidator = liquidator;
-        }
-        if let Some(manager) = new_order_manager_contract {
-            self.order_manager_contract = manager;
         }
         if let Some(threshold) = new_liquidation_threshold {
             self.liquidation_threshold = threshold;
