@@ -80,7 +80,7 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             return buyOrder;
         }
 
-        return { checkBalance, placeBuyOrder, placeSellOrder };
+        return { placeBuyOrder, placeSellOrder, checkBalance };
     } else {
         return {};
     }

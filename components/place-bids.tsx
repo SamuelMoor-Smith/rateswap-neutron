@@ -13,7 +13,7 @@ function PlaceBids({ orderType }: { orderType: OrderType }) {
     const { connect, openView, status, username, address, message, wallet } =
     useChain(CHAIN_NAME);
 
-    const { placeBuyOrder } = CosmosService(wallet as Wallet);
+    const { placeBuyOrder, placeSellOrder } = CosmosService(wallet as Wallet);
     
     const handleLimitChange = (event: { target: { value: React.SetStateAction<string>; }; }) => setLimit(event.target.value);
     const handleAmountChange = (event: { target: { value: React.SetStateAction<string>; }; }) => setAmount(event.target.value);
