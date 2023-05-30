@@ -9,29 +9,36 @@ import { CHAIN_NAME } from '../pages/_app';
 
 const mockData = {
     [OrderType.BUY]: [
+        { price: 1, size: 120},
+        { price: 0.96, size: 40},
+        { price: 0.935, size: 50},
+        { price: 0.81, size: 80},
+        { price: 0.805, size: 90},
+        { price: 0.88, size: 60},
+        { price: 0.865, size: 40},
+        { price: 0.85, size: 33},
+        { price: 0.705, size: 20},
+        { price: 0.7, size: 80},
+        { price: 0.6, size: 70},
+        { price: 0.51, size: 60},
+        { price: 0.505, size: 40},
+        { price: 0.5, size: 10},
     ],
     [OrderType.SELL]: [
-        { price: 53000, size: 0.3, total: 15900 },
-        { price: 54000, size: 0.7, total: 37800 },
-        { price: 55000, size: 0.8, total: 44000 },
-        { price: 50000, size: 0.5, total: 25000 },
-        { price: 51000, size: 0.4, total: 20400 },
-        { price: 52000, size: 0.6, total: 31200 },
-        { price: 50000, size: 0.5, total: 25000 },
-        { price: 51000, size: 0.4, total: 20400 },
-        { price: 52000, size: 0.6, total: 31200 },
-        { price: 50000, size: 0.5, total: 25000 },
-        { price: 51000, size: 0.4, total: 20400 },
-        { price: 52000, size: 0.6, total: 31200 },
-        { price: 50000, size: 0.5, total: 25000 },
-        { price: 51000, size: 0.4, total: 20400 },
-        { price: 52000, size: 0.6, total: 31200 },
-        { price: 50000, size: 0.5, total: 25000 },
-        { price: 51000, size: 0.4, total: 20400 },
-        { price: 52000, size: 0.6, total: 31200 },
-        { price: 50000, size: 0.5, total: 25000 },
-        { price: 51000, size: 0.4, total: 20400 },
-        { price: 52000, size: 0.6, total: 31200 },
+        { price: 0.5, size: 10},
+        { price: 0.505, size: 40},
+        { price: 0.51, size: 60},
+        { price: 0.6, size: 70},
+        { price: 0.7, size: 80},
+        { price: 0.705, size: 20},
+        { price: 0.85, size: 33},
+        { price: 0.865, size: 40},
+        { price: 0.88, size: 60},
+        { price: 0.805, size: 90},
+        { price: 0.81, size: 80},
+        { price: 0.935, size: 50},
+        { price: 0.96, size: 40},
+        { price: 1, size: 120},
     ],
 };
 
@@ -46,43 +53,57 @@ export function MyOrders({ orderType }: { orderType: OrderType }) {
     const { connect, openView, status, username, address, message, wallet } =
     useChain(CHAIN_NAME);
 
-    const { getOrderBook, getMyBuyOrders } = CosmosService(wallet as Wallet);
+    const { getOrderBook, getMySellOrders } = CosmosService(wallet as Wallet);
 
     interface OrderData {
         price: number;
         size: number;
-        total: number;
       }
       
     const initialOrderData: Record<OrderType, OrderData[]> = {
-    [OrderType.BUY]: [],
-    [OrderType.SELL]: mockData[OrderType.SELL],
+        [OrderType.BUY]: mockData[OrderType.BUY],
+        [OrderType.SELL]: mockData[OrderType.SELL],
     };
     
     const [orderData, setOrderData] = useState(initialOrderData);
 
     useEffect(() => {
-        if (getOrderBook && orderType === OrderType.BUY) {
-            getMyBuyOrders().then((buyOrders) => {
-                let buyOrderData = buyOrders.map((order) => ({
-                    price: parseFloat(order.price), 
-                    size: parseFloat(order.quantity), 
-                    total: parseFloat(order.price) * parseFloat(order.quantity)
+        if (getOrderBook && orderType === OrderType.SELL) {
+            getMySellOrders().then((sellOrders) => {
+                let sellOrderData: { [key: number]: number } = {};
+    
+                sellOrders.forEach((order) => {
+                    const price = parseFloat(order.price);
+                    const size = parseFloat(order.quantity);
+    
+                    if (sellOrderData[price]) {
+                        sellOrderData[price] += size;
+                    } else {
+                        sellOrderData[price] = size;
+                    }
+                });
+    
+                let formattedSellOrderData = Object.entries(sellOrderData).map(([price, size]) => ({
+                    price: parseFloat(price),
+                    size: size,
                 }));
-
-                setOrderData(prevState => ({...prevState, [OrderType.BUY]: buyOrderData}));
+    
+                // Sort the array from low to high by the 'price' property
+                formattedSellOrderData.sort((a, b) => a.price - b.price);
+    
+                setOrderData(prevState => ({...prevState, [OrderType.SELL]: formattedSellOrderData}));
             });
         }
-    }, [getOrderBook, getMyBuyOrders, orderType]);
+    }, [getOrderBook, getMySellOrders, orderType]);
 
     return (
         <Box w="100%" bg="transparent">
             <Table variant="unstyled" size="sm">
                 {orderType === OrderType.BUY && <Thead>
                     <Tr>
-                        <Th color={color} fontWeight="bold" width="25%">Price (USDT)</Th>
-                        <Th color={color} fontWeight="bold" width="25%">Size (BTC)</Th>
-                        <Th color={color} fontWeight="bold" width="25%">Total (USDT)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Price (USDC)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Size (fyUSDC)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Total (USDC)</Th>
                         <Th width="25%"></Th>  {/* Added new header for cancel button */}
                     </Tr>
                 </Thead>}
@@ -94,7 +115,7 @@ export function MyOrders({ orderType }: { orderType: OrderType }) {
                             <Tr key={index}>
                                 <Td color={color} width="25%">{order.price}</Td>
                                 <Td color={color} width="25%">{order.size}</Td>
-                                <Td color={color} width="25%">{order.total}</Td>
+                                <Td color={color} width="25%">{(order.price * order.size).toFixed(2)}</Td>
                                 <Td width="25%">
                                     {/* Added cancel button with red X */}
                                     <IconButton 
@@ -114,9 +135,9 @@ export function MyOrders({ orderType }: { orderType: OrderType }) {
             {orderType === OrderType.SELL && <Table variant="unstyled" size="sm">
                 <Thead>
                     <Tr>
-                        <Th color={color} fontWeight="bold" width="25%">Price (USDT)</Th>
-                        <Th color={color} fontWeight="bold" width="25%">Size (BTC)</Th>
-                        <Th color={color} fontWeight="bold" width="25%">Total (USDT)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Price (USDC)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Size (fyUSDC)</Th>
+                        <Th color={color} fontWeight="bold" width="25%">Total (USDC)</Th>
                         <Th width="25%"></Th>  {/* Added new header for cancel button */}
                     </Tr>
                 </Thead>

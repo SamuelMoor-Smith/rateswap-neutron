@@ -82,7 +82,7 @@ function PlaceBids({ orderType }: { orderType: OrderType }) {
                     >
                         1/2
                     </Button>
-                    <Text width="2.5em" justifyContent="right">BTC</Text>
+                    <Text width="2.5em" justifyContent="right">fyUSDC</Text>
                     </Stack>
                     </InputRightAddon>
             </InputGroup>

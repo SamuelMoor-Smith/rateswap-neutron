@@ -43,8 +43,8 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             let allBuyOrders = [];
             
             for (let bucket of orderBook.order_bucket) {
-                for(let ask of bucket.asks) {
-                    allBuyOrders.push(ask);
+                for(let bid of bucket.bids) {
+                    allBuyOrders.push(bid);
                 }
             }
             
@@ -56,8 +56,8 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             let allSellOrders = [];
             
             for (let bucket of orderBook.order_bucket) {
-                for(let bid of bucket.bids) {
-                    allSellOrders.push(bid);
+                for(let ask of bucket.asks) {
+                    allSellOrders.push(ask);
                 }
             }
             
@@ -69,9 +69,9 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             let myBuyOrders = [];
             
             for (let bucket of orderBook.order_bucket) {
-                for(let ask of bucket.asks) {
-                    if (ask.orderer === address) {
-                        myBuyOrders.push(ask);
+                for(let bid of bucket.bids) {
+                    if (bid.orderer === address) {
+                        myBuyOrders.push(bid);
                     }
                 }
             }
@@ -84,9 +84,9 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             let mySellOrders = [];
             
             for (let bucket of orderBook.order_bucket) {
-                for(let bid of bucket.bids) {
-                    if (bid.orderer === address) {
-                        mySellOrders.push(bid);
+                for(let ask of bucket.asks) {
+                    if (ask.orderer === address) {
+                        mySellOrders.push(ask);
                     }
                 }
             }
