@@ -552,6 +552,80 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
+fn query_collateral(deps: Deps, address: Addr) -> StdResult<CollateralResponse> {
+    let balance = COLLATERALS.load(deps.storage, &address)?;
+    Ok(CollateralResponse {
+        address,
+        balance,
+    })
+}
+
+fn query_loan(deps: Deps, address: Addr) -> StdResult<LoanResponse> {
+    let balance = LOANS.load(deps.storage, &address)?;
+    Ok(LoanResponse {
+        address,
+        balance,
+    })
+}
+
+pub fn query_prices(_deps: Deps) -> StdResult<PricesResponse> {
+    // Hard-coded prices
+    let prices = PricesResponse {
+        atom: Decimal::one(),
+        usdc: Decimal::one(),
+    };
+
+    Ok(prices)
+}
+
+
+
+fn query_details(deps: Deps, id: String) -> StdResult<DetailsResponse> {
+    let escrow = ESCROWS.load(deps.storage, &id)?;
+
+    let cw20_whitelist = escrow.human_whitelist();
+
+    // transform tokens
+    let native_balance = escrow.balance.native;
+
+    let cw20_balance: StdResult<Vec<_>> = escrow
+        .balance
+        .cw20
+        .into_iter()
+        .map(|token| {
+            Ok(Cw20Coin {
+                address: token.address.into(),
+                amount: token.amount,
+            })
+        })
+        .collect();
+
+    let recipient = escrow.recipient.map(|addr| addr.into_string());
+
+    let details = DetailsResponse {
+        id,
+        arbiter: escrow.arbiter.into(),
+        recipient,
+        source: escrow.source.into(),
+        title: escrow.title,
+        description: escrow.description,
+        end_height: escrow.end_height,
+        end_time: escrow.end_time,
+        native_balance,
+        cw20_balance: cw20_balance?,
+        cw20_whitelist,
+    };
+    Ok(details)
+}
+
+fn query_list(deps: Deps) -> StdResult<ListResponse> {
+    Ok(ListResponse {
+        escrows: all_escrow_ids(deps.storage)?,
+    })
+}
+
+
+
 
 
 
