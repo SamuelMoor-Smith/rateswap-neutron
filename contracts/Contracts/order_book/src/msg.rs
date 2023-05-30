@@ -2,14 +2,19 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use cosmwasm_std::{Addr, Api, Coin, StdResult, Uint128, Decimal};
 
-use cw20::{Cw20Coin, Cw20ReceiveMsg};
+use cw20::{Cw20Coin, Cw20ReceiveMsg, Expiration};
 
 use crate::state::{Order, OrderBucket, State};
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub fyusdc_contract: String,
-    pub usdc_contract: String,
+    pub liquidation_deadline: u64,
+    pub liquidator: Addr,
+    pub fyusdc_contract: Addr,
+    pub usdc_contract: Addr,
+    pub liquidation_threshold: Decimal,
+    pub liquidation_penalty: Decimal,
+    pub atom_contract: Addr
 }
 
 #[cw_serde]
@@ -38,17 +43,13 @@ pub enum ExecuteMsg {
     },
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     Receive(Cw20ReceiveMsg),
-    CancelBid {
-        order_id: String,
-        price: Decimal,
+    Withdraw {
+        amount: Uint128
     },
-    CancelAsk {
-        order_id: String,
-        price: Decimal,
-    },
-    UpdateBidOrder { id: String, new_quantity: Uint128 },
-    UpdateAskOrder { id: String, new_quantity: Uint128 },
-    //MatchOrders {},
+    Borrow {
+        amount: Uint128
+    }
+
 }
 
 #[cw_serde]
@@ -58,8 +59,15 @@ pub enum ReceiveMsg {
     TopUp {
         id: String,
     },
-    CreateBid { orderer: Addr, quantity: Uint128, price: Decimal },
-    CreateAsk { orderer: Addr, quantity: Uint128, price: Decimal },
+    Deposit{
+        orderer: Addr
+    },
+    Repay {
+        orderer: Addr
+    },
+    Redeem {
+        orderer: Addr
+    }
 }
 
 #[cw_serde]
@@ -115,29 +123,36 @@ pub enum QueryMsg {
     /// Return type: DetailsResponse.
     #[returns(DetailsResponse)]
     Details { id: String },
-    #[returns(OrderbookResponse)]
-    GetOrderbook {},
-    #[returns(UserOrdersResponse)]
-    GetUserOrders { user: Addr },
-    #[returns(StateResponse)]
-    GetState {},
+    #[returns(CollateralResponse)]
+    GetCollateral { address: Addr },
+    #[returns(LoanResponse)]
+    GetLoan { address: Addr }, 
+    #[returns(PricesResponse)]
+    GetPrices {}, 
 }
 
 #[cw_serde]
-pub struct StateResponse {
-    pub State: Vec<State>,
-}
-
-
-#[cw_serde]
-pub struct OrderbookResponse {
-    pub order_bucket: Vec<OrderBucket>,
+pub struct PricesResponse {
+    pub atom: Decimal,
+    pub usdc: Decimal,
 }
 
 #[cw_serde]
-pub struct UserOrdersResponse {
-    pub orders: Vec<Order>,
+pub struct CollateralResponse {
+    /// address
+    pub address: Addr,
+    /// collateral balance
+    pub balance: Uint128,
 }
+#[cw_serde]
+pub struct LoanResponse {
+    /// address
+    pub address: Addr,
+    /// loan balance
+    pub balance: Uint128,
+}
+
+
 
 #[cw_serde]
 pub struct ListResponse {
