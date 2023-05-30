@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     from_binary, to_binary, Addr, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, StdError, SubMsg, WasmMsg, Uint128, Decimal, CosmosMsg
+    StdResult, StdError, SubMsg, WasmMsg, Uint128, Decimal, CosmosMsg, Timestamp, Attribute
 };
 
 use cw2::set_contract_version;
