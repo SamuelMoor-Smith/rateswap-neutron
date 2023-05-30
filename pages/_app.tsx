@@ -7,7 +7,6 @@ import { wallets } from '@cosmos-kit/keplr';
 import { MainWalletBase, SignerOptions } from '@cosmos-kit/core';
 import { chains, assets } from 'chain-registry';
 import Layout from '../components/layout';
-import { ChainBox } from '../components';
 
 export const CHAIN_NAME = 'neutrontestnet';
 
