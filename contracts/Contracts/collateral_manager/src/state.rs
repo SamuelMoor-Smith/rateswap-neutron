@@ -10,7 +10,7 @@ use cw_storage_plus::Item;
 use std::collections::HashMap;
 
 
-use cw20::{Balance, Cw20CoinVerified, Expiration};
+use cw20::{Balance, Cw20CoinVerified};
 
 
 // State of the contract
