@@ -2,7 +2,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use cosmwasm_std::{Addr, Api, Coin, StdResult, Uint128, Decimal};
 
-use cw20::{Cw20Coin, Cw20ReceiveMsg, Expiration};
+use cw20::{Cw20Coin, Cw20ReceiveMsg};
 
 
 #[cw_serde]
@@ -13,7 +13,7 @@ pub struct InstantiateMsg {
     pub usdc_contract: Addr,
     pub liquidation_threshold: Decimal,
     pub liquidation_penalty: Decimal,
-    pub atom_contract: Addr
+    pub atom_contract: Addr,
 }
 
 #[cw_serde]
@@ -47,7 +47,9 @@ pub enum ExecuteMsg {
     },
     Borrow {
         amount: Uint128
-    }
+    },
+
+
 
 }
 
