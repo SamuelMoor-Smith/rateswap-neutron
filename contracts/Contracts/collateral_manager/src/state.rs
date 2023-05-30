@@ -17,7 +17,6 @@ use cw20::{Balance, Cw20CoinVerified, Expiration};
 #[cw_serde]
 pub struct State {
     pub contract_owner: Addr,
-    pub authorized_checker: Addr,
     pub liquidation_deadline: Expiration,
     pub liquidator: Addr,
     pub liquidation_threshold: Decimal,
@@ -43,9 +42,6 @@ impl State {
     ) -> StdResult<()> {  
         if caller != &self.contract_owner {
             return Err(StdError::generic_err("Unauthorized"));  
-        }
-        if let Some(checker) = new_authorized_checker {
-            self.authorized_checker = checker;
         }
         if let Some(deadline) = new_liquidation_deadline {
             self.liquidation_deadline = deadline;
