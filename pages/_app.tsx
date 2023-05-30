@@ -1,14 +1,15 @@
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
-import { defaultTheme, ChainProvider } from '@cosmos-kit/react';
+import { ChainProvider } from '@cosmos-kit/react';
+import { defaultTheme } from '../config';
 import { ChakraProvider } from '@chakra-ui/react';
-import { wallets as keplrWallets } from '@cosmos-kit/keplr';
-import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
-import { wallets as leapWallets } from '@cosmos-kit/leap';
-
+import { wallets } from '@cosmos-kit/keplr';
 import { MainWalletBase, SignerOptions } from '@cosmos-kit/core';
 import { chains, assets } from 'chain-registry';
 import Layout from '../components/layout';
+import { ChainBox } from '../components';
+
+export const CHAIN_NAME = 'neutrontestnet';
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
@@ -22,7 +23,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       <ChainProvider
         chains={chains}
         assetLists={assets}
-        wallets={([...keplrWallets, ...cosmostationWallets, ...leapWallets] as unknown) as MainWalletBase[]}
+        wallets={([...wallets] as unknown) as MainWalletBase[]}
         walletConnectOptions={{
           signClient: {
             projectId: 'a8510432ebb71e6948cfd6cde54b70f7',
@@ -39,6 +40,8 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
         signerOptions={signerOptions}
       >
         <Layout>
+
+          {/* <ChainBox chainOption={chainData} /> */}
           <Component {...pageProps} />
         </Layout>
       </ChainProvider>

@@ -42,6 +42,10 @@ import { assets } from "chain-registry";
 import { Rate } from "../rate";
 import { Maturity } from "../maturity-date";
 import { AvailableCoin } from "../available-coin";
+import { CosmosService } from "../../api/fyUSDC-contract";
+import { useChain, useWallet } from "@cosmos-kit/react";
+import { CHAIN_NAME } from "../../pages/_app";
+import { Wallet } from "@cosmos-kit/core";
 
 interface walletType {
   id: string;
@@ -67,6 +71,7 @@ const WithdrawTokens = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
+
   const [wallets, setWallets] = useState<walletType[]>([
     {
       id: "from",
@@ -83,13 +88,33 @@ const WithdrawTokens = ({
   ]);
   const [inputValue, setInputValue] = useState<string>("0");
   const [data, setData] = useState<dataType[]>([]);
+
   const [selectedItem, setSelectedItem] = useState<dataType>({
     label: "fyUSDC",
     display: "fyUSDC",
     value: "fyUSDC",
     imgSrc: "logo-removebg.png",
-    available: "23138917",
+    available: "loading...",
   });
+
+  const { connect, openView, status, username, address, message, wallet } =
+    useChain(CHAIN_NAME);
+
+  const { checkBalance } = CosmosService(wallet as Wallet);
+    
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (address && checkBalance) {
+        const balance = await checkBalance(address);
+        setSelectedItem(prev => ({
+          ...prev,
+          available: balance.balance.toString(),
+        }));
+      }
+    };
+    fetchBalance();
+  }, [address]);
+
   const [submitLoading, setSubmitLoading] = useState(false);
   const optionsMenuRef = useRef<HTMLDivElement | null>(null);
 

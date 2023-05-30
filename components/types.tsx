@@ -62,7 +62,7 @@ export type handleSelectChainDropdown = (value: ChainOption | null) => void;
 export interface ChangeChainDropdownType {
   data: ChainOption[];
   selectedItem?: ChainOption;
-  onChange: handleSelectChainDropdown;
+  onChange?: handleSelectChainDropdown;
   chainDropdownLoading?: boolean;
 }
 
@@ -70,7 +70,7 @@ export interface ChangeChainMenuType {
   data: ChainOption[];
   value?: ChainOption;
   onClose?: () => void;
-  onChange: handleSelectChainDropdown;
+  onChange?: handleSelectChainDropdown;
   innerRef?: RefObject<HTMLInputElement>;
 }
 

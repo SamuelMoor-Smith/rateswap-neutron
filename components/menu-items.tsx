@@ -135,7 +135,7 @@ export const MobileMenu = ({
             onClick={onOpen}
           />
           {logo}
-          <IconButton
+          {/* <IconButton
             aria-label="color mode"
             variant="outline"
             icon={handleChangeColorModeValue(
@@ -145,7 +145,7 @@ export const MobileMenu = ({
             )}
             _focus={{ outline: 'none' }}
             onClick={toggleColorMode}
-          />
+          /> */}
         </Flex>
         {/* drawer */}
         <Drawer
@@ -427,7 +427,7 @@ export const DesktopMenu = ({
             )}
             py={4}
           >
-            <Box w="full" maxW={72}>
+            <Box w="full" maxW={60}>
               {chainDropdown}
             </Box>
             {copyAddressButton && (
@@ -441,7 +441,7 @@ export const DesktopMenu = ({
                 {copyAddressButton}
               </Center>
             )}
-            <IconButton
+            {/* <IconButton
               display="flex"
               aria-label="color mode"
               variant="outline"
@@ -459,7 +459,7 @@ export const DesktopMenu = ({
               }}
               _focus={{ outline: 'none' }}
               onClick={toggleColorMode}
-            />
+            /> */}
           </Stack>
         </Box>
         {/* content */}

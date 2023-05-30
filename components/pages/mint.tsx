@@ -41,6 +41,10 @@ import { FiChevronDown, FiX } from "react-icons/fi";
 import { assets } from "chain-registry";
 import { Rate } from "../rate";
 import { AvailableCoin } from "../available-coin";
+import { useChain } from "@cosmos-kit/react";
+import { CHAIN_NAME } from "../../pages/_app";
+import { Wallet } from "@cosmos-kit/core";
+import { CosmosService } from "../../api/fyUSDC-contract";
 
 interface walletType {
   id: string;
@@ -91,6 +95,11 @@ const WithdrawTokens = ({
   });
   const [submitLoading, setSubmitLoading] = useState(false);
   const optionsMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const { connect, openView, status, username, address, message, wallet } =
+    useChain(CHAIN_NAME);
+
+  const { placeBuyOrder } = CosmosService(wallet as Wallet);
 
   const {
     isOpen: selectIsOpen,
@@ -212,6 +221,7 @@ const WithdrawTokens = ({
               w="full"
               h={14}
               isDisabled={inputValue === "0" ? true : false}
+              onClick={() => placeBuyOrder!("10", "10", "0.6")}
             >
               Mint
             </Button>

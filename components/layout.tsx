@@ -5,7 +5,7 @@ import {
   } from '@chakra-ui/react';
 import React, { ReactNode } from 'react';
 
-import { ChooseChain } from './react';
+import { Chain } from './react';
 import { ChainOption } from './types';
 import { WalletStatus } from '@cosmos-kit/core';
 
@@ -23,6 +23,13 @@ import {
 } from ".";
 import { DesktopMenu, MobileMenu } from './menu-items';
 import Link from 'next/link';
+
+const chainOption = {
+  chainName: 'neutrontestnet',
+  label: 'Neutron Testnet',
+  value: 'neutrontestnet',
+  icon: 'https://raw.githubusercontent.com/cosmos/chain-registry/master/testnets/neutrontestnet/images/neutron.svg'
+} as ChainOption;
 
 type SimpleLayoutType = {
   logo?: React.ReactNode;
@@ -55,6 +62,7 @@ const SimpleLayout = ({
   isFullWidth,
   children
 }: SimpleLayoutType) => {
+
   const { toggleColorMode } = useColorMode();
 
     return (
@@ -95,50 +103,20 @@ const SimpleLayout = ({
   }
 
   export default function Layout ({ children } : LayoutProps) {
-
-    const [chainName, setChainName] = useState<ChainName | undefined>(
-        'osmosis'
-      );
     const { chainRecords, getChainLogo } = useManager();
 
-    const chainOptions = useMemo(
-    () =>
-        chainRecords.map((chainRecord) => {
-        return {
-            chainName: chainRecord?.name,
-            label: chainRecord?.chain.pretty_name,
-            value: chainRecord?.name,
-            icon: getChainLogo(chainRecord.name),
-        };
-        }),
-    [chainRecords, getChainLogo]
-    );
-
-    useEffect(() => {
-    setChainName(window.localStorage.getItem('selected-chain') || 'cosmoshub');
-    }, []);
-
-    const onChainChange: handleSelectChainDropdown = async (
-    selectedValue: ChainOption | null
-    ) => {
-    setChainName(selectedValue?.chainName);
-    if (selectedValue?.chainName) {
-        window?.localStorage.setItem('selected-chain', selectedValue?.chainName);
-    } else {
-        window?.localStorage.removeItem('selected-chain');
-    }
-    };
-
+    console.log("chainRecords: ", chainRecords);
     const chooseChain = (
-    <ChooseChain
-        chainName={chainName}
-        chainInfos={chainOptions}
-        onChange={onChainChange}
+    <Chain
+        chainOption={chainOption}
+        // chainName={chainName}
+        // chainInfos={chainOptions}
     />
     );
 
+    const chainName = chainOption.chainName;
     const { status, address } =
-        useChain(chainName ? chainName : 'osmosis');
+        useChain(chainName);
 
     const addressBtn = (chainName && status === WalletStatus.Connected  ?
         (<CopyAddressBtn
