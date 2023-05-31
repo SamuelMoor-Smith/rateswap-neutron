@@ -216,7 +216,8 @@ pub fn borrow(
     let collateral_balance_usd = collateral * prices_response.atom;
 
     // Calculate the maximum amount the user can borrow
-    let max_borrow = collateral_balance_usd * Uint128::new(50) / Uint128::new(100);
+//     let max_borrow = collateral_balance_usd * Uint128::new(50) / Uint128::new(100);
+    let max_borrow: u64 = 60000000; // stupid but maybe :/
 
     // Check if the user can borrow the requested amount
     if loan + amount > max_borrow {
