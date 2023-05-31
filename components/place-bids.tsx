@@ -88,7 +88,7 @@ function PlaceBids({ orderType }: { orderType: OrderType }) {
             </InputGroup>
 
             <Box mt={5}>
-                <Text color={color}>Total: {isNaN(total) ? 0 : total} USDC</Text>
+                <Text color={color}>Trade: {isNaN(total) ? 0 : `${amount} fyUSDC for ${total.toFixed(2)} USDC`}</Text>
             </Box>
 
             <Button

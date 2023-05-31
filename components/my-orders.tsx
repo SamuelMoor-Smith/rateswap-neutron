@@ -9,53 +9,21 @@ import { CHAIN_NAME } from '../pages/_app';
 
 const mockData = {
     [OrderType.BUY]: [
-        { price: 1, size: 120},
-        { price: 0.96, size: 40},
-        { price: 0.935, size: 50},
-        { price: 0.81, size: 80},
-        { price: 0.805, size: 90},
-        { price: 0.88, size: 60},
-        { price: 0.865, size: 40},
-        { price: 0.85, size: 33},
-        { price: 0.705, size: 20},
-        { price: 0.7, size: 80},
-        { price: 0.6, size: 70},
-        { price: 0.51, size: 60},
-        { price: 0.505, size: 40},
-        { price: 0.5, size: 10},
     ],
     [OrderType.SELL]: [
-        { price: 0.5, size: 10},
-        { price: 0.505, size: 40},
-        { price: 0.51, size: 60},
-        { price: 0.6, size: 70},
-        { price: 0.7, size: 80},
-        { price: 0.705, size: 20},
-        { price: 0.85, size: 33},
-        { price: 0.865, size: 40},
-        { price: 0.88, size: 60},
-        { price: 0.805, size: 90},
-        { price: 0.81, size: 80},
-        { price: 0.935, size: 50},
-        { price: 0.96, size: 40},
-        { price: 1, size: 120},
     ],
 };
 
 export function MyOrders({ orderType }: { orderType: OrderType }) {
     const color = useColorModeValue(orderType === OrderType.BUY ? "green.500" : "red.500", orderType === OrderType.BUY ? "green.200" : "red.200");
 
-    const handleCancelOrder = (orderIndex: number) => {
-        // put your cancel order logic here
-        console.log(`Order at index ${orderIndex} is cancelled`);
-    };
-
     const { connect, openView, status, username, address, message, wallet } =
     useChain(CHAIN_NAME);
 
-    const { getOrderBook, getMySellOrders } = CosmosService(wallet as Wallet);
+    const { getOrderBook, getMySellOrders, cancelSellOrder } = CosmosService(wallet as Wallet);
 
     interface OrderData {
+        id?: string,
         price: number;
         size: number;
       }
@@ -70,22 +38,26 @@ export function MyOrders({ orderType }: { orderType: OrderType }) {
     useEffect(() => {
         if (getOrderBook && orderType === OrderType.SELL) {
             getMySellOrders().then((sellOrders) => {
-                let sellOrderData: { [key: number]: number } = {};
+                let sellOrderData: { [key: number]: {
+                    id: string,
+                    amount: number
+                } } = {};
     
                 sellOrders.forEach((order) => {
                     const price = parseFloat(order.price);
                     const size = parseFloat(order.quantity);
     
                     if (sellOrderData[price]) {
-                        sellOrderData[price] += size;
+                        sellOrderData[price].amount += size;
                     } else {
-                        sellOrderData[price] = size;
+                        sellOrderData[price] = {id: order.id, amount: size};
                     }
                 });
     
-                let formattedSellOrderData = Object.entries(sellOrderData).map(([price, size]) => ({
+                let formattedSellOrderData = Object.entries(sellOrderData).map(([price, {id, amount}]) => ({
                     price: parseFloat(price),
-                    size: size,
+                    id: id,
+                    size: amount,
                 }));
     
                 // Sort the array from low to high by the 'price' property
@@ -124,7 +96,15 @@ export function MyOrders({ orderType }: { orderType: OrderType }) {
                                         colorScheme="red" 
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleCancelOrder(index)}
+                                        onClick={() => {
+                                            console.log("Order cancelled")
+                                            if (order.id && cancelSellOrder) {
+                                                return cancelSellOrder(order.id, order.price.toString())
+                                            } else {
+                                                return null;
+                                            }
+                                        }
+                                    }
                                     />
                                 </Td>
                             </Tr>

@@ -31,6 +31,14 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             return Q_CLIENT;
         }
 
+        async function getOrderBookCLient() {
+            const SCW_CLIENT = await getSigningCosmWasmClient()
+            if (!X_CLIENT) {
+                X_CLIENT = new client.Sg721Client(SCW_CLIENT, address!, ORDER_BOOK_CONTRACT_ADDRESS)
+            }
+            return X_CLIENT;
+        }
+
         async function getOrderBook() {
             const Q_CLIENT = await getFyUSDCQueryClient();
             let orderBook = await Q_CLIENT.getOrderbook()
@@ -93,10 +101,21 @@ export const CosmosService = (wallet: Wallet | undefined) => {
             
             return mySellOrders;
         }
+
+        async function cancelSellOrder(id: string, price: string) {
+            const X_CLIENT = await getOrderBookCLient();
+
+            let cancelAsk = await X_CLIENT.cancelAsk({
+                "orderId": id,
+                "price": price
+            }, calculateFee(500000, GasPrice.fromString("0.01untrn")));
+            console.log(cancelAsk);
+            return cancelAsk;
+        }
         
         
 
-        return { getOrderBook, getAllBuyOrders, getAllSellOrders, getMyBuyOrders, getMySellOrders };
+        return { getOrderBook, getAllBuyOrders, getAllSellOrders, getMyBuyOrders, getMySellOrders, cancelSellOrder };
     } else {
         return {};
     }
